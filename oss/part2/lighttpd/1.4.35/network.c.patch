@@ -1,0 +1,198 @@
+--- lighttpd-1.4.35/src/network.c	2014-03-06 22:08:00.000000000 +0800
++++ lighttpd-1.4.35/src/network2.c	2016-06-16 22:01:52.570100644 +0800
+@@ -523,18 +523,136 @@
+ } network_backend_t;
+ 
+ #ifdef USE_OPENSSL
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <openssl/aes.h>
++
++#define AES_PWD_LEN   32
++#define AES_BLK_LEN   16
++
++static int get_file_data_len(const char *file){
++    FILE *fp = NULL;
++	int len = 0;
++	
++	fp = fopen(file, "r");
++	if (fp)
++	{
++	    fseek(fp, 0, SEEK_END);
++		len = ftell(fp);
++		fclose(fp);
++	}
++	return len;
++}
++
++static int read_data_from_file(const char *file, char *buf, int buf_len){
++	int len = 0;
++	FILE *fp = NULL;
++	if (fp = fopen(file, "rb")){
++		len = fread(buf, 1, buf_len, fp);
++		fclose(fp);
++		return len;
++	}
++	return -1;
++}
++
++static int get_aes_password(char *pwd, int len){
++	int i = 0;
++	
++	strncpy(pwd, "ieuliwpxliisuemkdix[aa]qpw].xpw@", len);
++	
++	while (pwd[i] != 0 && i < len)
++	{
++		pwd[i] = (pwd[i] + 5) % 127;
++		if (pwd[i] < 32) pwd[i] += 32;
++		i++;
++	}
++	return i;
++}
++
++static char* dec_pem_file_to_buff(const char *file, unsigned int* p_data_len){
++	char *aes_in = NULL;
++	char *aes_out = NULL;
++	char aes_pwd[AES_PWD_LEN] = {0};
++	AES_KEY aes_key = {0};
++	unsigned int data_len = 0;
++
++	if ( (data_len = get_file_data_len(file)) <= 0)
++	{
++		goto error_dec;
++	}
++	if (data_len % AES_BLK_LEN) 
++	{
++		goto error_dec;
++	}
++
++	aes_in = (char*)malloc(data_len);
++	aes_out = (char*)malloc(data_len);
++	if (!aes_in || !aes_out)
++	{
++		goto error_dec;
++	}
++	memset(aes_in, 0, data_len);
++	memset(aes_out, 0, data_len);
++
++	
++	if ( read_data_from_file(file, aes_in, data_len) <= 0)
++	{
++		goto error_dec;
++	}
++	if ( get_aes_password(aes_pwd, AES_PWD_LEN) != AES_PWD_LEN)
++	{
++		goto error_dec;
++	}
++	if (AES_set_decrypt_key(aes_pwd, AES_PWD_LEN*8, &aes_key) < 0)
++	{
++		goto error_dec;
++	}
++	else
++	{
++		char *aes_in2 = NULL;
++		char *aes_out2 = NULL;
++		int len = 0;
++		aes_in2 = aes_in;
++		aes_out2 = aes_out;
++
++		while (len < data_len)
++		{
++		  AES_decrypt(aes_in2, aes_out2, &aes_key);
++		  aes_in2 += AES_BLK_LEN;
++		  aes_out2 += AES_BLK_LEN;
++		  len += AES_BLK_LEN;
++		}
++	}
++	*p_data_len = data_len;
++	free(aes_in);
++	return aes_out;
++	
++error_dec:
++	if (NULL != aes_out) free(aes_out);
++	if (NULL != aes_in) free(aes_in);
++	*p_data_len = 0;
++	return NULL;
++}
++
+ static X509* x509_load_pem_file(server *srv, const char *file) {
+ 	BIO *in;
+ 	X509 *x = NULL;
++	unsigned int data_len = 0;
++	char* pem_buf = dec_pem_file_to_buff(file, &data_len);
+ 
+-	in = BIO_new(BIO_s_file());
++	if (NULL == pem_buf) {
++		goto error;
++	}
++
++	in = BIO_new(BIO_s_mem());
+ 	if (NULL == in) {
+-		log_error_write(srv, __FILE__, __LINE__, "S", "SSL: BIO_new(BIO_s_file()) failed");
++		log_error_write(srv, __FILE__, __LINE__, "S", "SSL: BIO_new(BIO_s_mem()) failed");
+ 		goto error;
+ 	}
+ 
+-	if (BIO_read_filename(in,file) <= 0) {
+-		log_error_write(srv, __FILE__, __LINE__, "SSS", "SSL: BIO_read_filename('", file,"') failed");
++	if (BIO_write(in, pem_buf, data_len) <= 0) {
++		log_error_write(srv, __FILE__, __LINE__, "SSS", "SSL: BIO_write failed");
+ 		goto error;
+ 	}
+ 	x = PEM_read_bio_X509(in, NULL, NULL, NULL);
+@@ -545,39 +663,49 @@
+ 	}
+ 
+ 	BIO_free(in);
++	free(pem_buf);
+ 	return x;
+ 
+ error:
+ 	if (NULL != in) BIO_free(in);
++	if (NULL != pem_buf) free(pem_buf);
+ 	return NULL;
+ }
+ 
+ static EVP_PKEY* evp_pkey_load_pem_file(server *srv, const char *file) {
+ 	BIO *in;
+ 	EVP_PKEY *x = NULL;
++	unsigned int data_len = 0;
++	char* pem_buf = dec_pem_file_to_buff(file, &data_len);
+ 
+-	in=BIO_new(BIO_s_file());
++	if (NULL == pem_buf) {
++		goto error;
++	}
++	
++	in=BIO_new(BIO_s_mem());
+ 	if (NULL == in) {
+-		log_error_write(srv, __FILE__, __LINE__, "s", "SSL: BIO_new(BIO_s_file()) failed");
++		log_error_write(srv, __FILE__, __LINE__, "s", "SSL: BIO_new(BIO_s_mem()) failed");
+ 		goto error;
+ 	}
+ 
+-	if (BIO_read_filename(in,file) <= 0) {
+-		log_error_write(srv, __FILE__, __LINE__, "SSS", "SSL: BIO_read_filename('", file,"') failed");
++	if (BIO_write(in, pem_buf, data_len) <= 0) {
++		log_error_write(srv, __FILE__, __LINE__, "SSS", "SSL: BIO_write() failed");
+ 		goto error;
+ 	}
+ 	x = PEM_read_bio_PrivateKey(in, NULL, NULL, NULL);
+-
++	
+ 	if (NULL == x) {
+ 		log_error_write(srv, __FILE__, __LINE__, "SSS", "SSL: couldn't read private key from '", file,"'");
+ 		goto error;
+ 	}
+ 
+ 	BIO_free(in);
++	free(pem_buf);
+ 	return x;
+ 
+ error:
+ 	if (NULL != in) BIO_free(in);
++	if (NULL != pem_buf) free(pem_buf);
+ 	return NULL;
+ }
+ 

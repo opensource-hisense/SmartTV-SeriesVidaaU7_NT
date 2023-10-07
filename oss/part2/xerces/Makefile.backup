@@ -1,0 +1,55 @@
+
+XERCES_VERSION := 3.1.1
+OSS_OUTPUT := /proj/mtk12034/apollo-prod-2102/oss/source/xerces
+CROSS_COMPILE := /proj/mtk12034/apollo-prod-2102/tools/mtk_toolchain/gcc-arm-none-linux-gnueabihf-10.2.1/bin/arm-none-linux-gnueabihf-
+OSS_LIB_ROOT := /proj/mtk12034/apollo-prod-2102/oss/library/gnuarm-10.2.1_neon_ca9
+PLATFORM_ARCH := arm-none-linux-gnueabihf
+XERCES_OUTPUT := $(OSS_OUTPUT)/xerces
+XERCES_SOURCE := $(XERCES_OUTPUT)/xerces-c-$(XERCES_VERSION)
+XERCES_BUILD  := $(XERCES_OUTPUT)/xerces-c-$(XERCES_VERSION)-build
+XERCES_FILE := xerces-c-$(XERCES_VERSION).tar.bz2
+
+LD_LIBRARY_PATH :=
+JOBS ?= $(shell grep processor /proc/cpuinfo | wc -l)
+XERCES_CFLAGS := -g -fPIC -O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now
+CMAKE_PATH = /mtkoss/cmake/3.9.3-linux/x86_64/bin
+	
+all: xerces_prepare
+	$(info$(CROSS_COMPILE))
+	if [ ! -d $(XERCES_BUILD) ]; then \
+	    mkdir -p $(XERCES_BUILD)	; \
+	fi 
+	cd $(XERCES_BUILD) && \
+	CC="$(CROSS_COMPILE)gcc" CFLAGS="$(XERCES_CFLAGS) $(PLATFORM_CFLAGS)" CXXFLAGS="$(XERCES_CFLAGS)" AR="$(CROSS_COMPILE)ar rus" RANLIB="$(CROSS_COMPILE)ranlib" \
+	LD="$(CROSS_COMPILE)ld" NM="$(CROSS_COMPILE)nm" CXX="$(CROSS_COMPILE)g++" $(XERCES_SOURCE)/configure \
+		--prefix=$(OSS_LIB_ROOT)/xerces/$(XERCES_VERSION) \
+        --build=i686-pc-linux       \
+		--host=$(PLATFORM_ARCH)     \
+        --disable-static            \
+        --disable-network           \
+        --disable-sse2              \
+        --enable-transcoder-iconv 
+	make -j $(JOBS) -C $(XERCES_BUILD)
+		
+install:
+	@echo "$(XERCES_VERSION)"
+	@echo "xxxxxxxx"
+	@echo "$(OSS_OUTPUT)"
+	@echo "$(CROSS_COMPILE)"
+	make -C $(XERCES_BUILD) install
+
+clean:
+	rm -rf $(XERCES_OUTPUT)
+
+xerces_prepare:
+	if [ ! -d $(XERCES_SOURCE) ]; then \
+		mkdir -p $(XERCES_SOURCE); \
+		tar jxf $(XERCES_FILE) -C $(XERCES_OUTPUT); \
+                chmod -R 755 ${XERCES_SOURCE} ; \
+	fi
+
+notice:
+	cp -rf NOTICE.$(XERCES_VERSION).txt $(OSS_NOTICE_OUTPUT)/xerces_NOTICE.txt
+
+info:
+	cp -rf OSS_INFO.$(XERCES_VERSION).txt $(OSS_INFO_OUTPUT)/xerces_INFO.txt

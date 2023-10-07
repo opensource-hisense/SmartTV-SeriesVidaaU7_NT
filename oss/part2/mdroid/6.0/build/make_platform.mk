@@ -1,0 +1,48 @@
+#
+# File          make_platform.mk
+# Title         Specify toolchain/compiler flag/link flag/... variables
+#               about platform(combine with OS-ARCH).
+#               Current support platform:
+#                    linux-arm, linux-mips, linux-x86
+# Author        Jimmy Hsu
+#
+# Copyright (c) 2010-2011 MStar Semiconductor, Inc.  All rights reserved.
+#
+
+TARGET_CC = $(TARGET_TOOLCHAIN_PREFIX)gcc$(TARGET_TOOLCHAIN_SUFFIX)
+TARGET_CXX = $(TARGET_TOOLCHAIN_PREFIX)g++$(TARGET_TOOLCHAIN_SUFFIX)
+TARGET_AR = $(TARGET_TOOLCHAIN_PREFIX)ar$(TARGET_TOOLCHAIN_SUFFIX)
+TARGET_OBJCOPY = $(TARGET_TOOLCHAIN_PREFIX)objcopy$(TARGET_TOOLCHAIN_SUFFIX)
+TARGET_LD = $(TARGET_TOOLCHAIN_PREFIX)ld$(TARGET_TOOLCHAIN_SUFFIX)
+
+COMMON_GLOBAL_CFLAGS := -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith
+COMMON_GLOBAL_CPPFLAGS := $(COMMON_GLOBAL_CFLAGS) -Wsign-promo
+COMMON_RELEASE_CFLAGS := -DNDEBUG -UDEBUG
+COMMON_RELEASE_CPPFLAGS := $(COMMON_RELEASE_CFLAGS)
+
+TARGET_ERROR_FLAGS := -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point
+TARGET_GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar
+TARGET_GLOBAL_CPPFLAGS :=
+TARGET_RELEASE_CFLAGS := -O2 -g -fno-strict-aliasing
+TARGET_RELEASE_CPPFLAGS :=
+
+TARGET_GLOBAL_LDFLAGS :=
+TARGET_GLOBAL_ARFLAGS := crsP
+
+# Now include the combo for this specific target.
+ifneq ($(PLATFORM), )
+    include $(BUILD_SYSTEM)/TARGET_$(PLATFORM).mk
+endif
+
+TARGET_GLOBAL_CFLAGS += $(COMMON_GLOBAL_CFLAGS)
+TARGET_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
+TARGET_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
+TARGET_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
+
+TARGET_GLOBAL_CFLAGS += $(TARGET_ERROR_FLAGS) $(TARGET_RELEASE_CFLAGS) $(TARGET_ARCH_CFLAGS)
+TARGET_GLOBAL_CPPFLAGS += $(TARGET_ERROR_FLAGS) $(TARGET_RELEASE_CPPFLAGS) $(TARGET_ARCH_CFLAGS)
+
+PLAT_CFLAGS := $(TARGET_GLOBAL_CFLAGS)
+PLAT_CPPFLAGS := $(TARGET_GLOBAL_CPPFLAGS)
+PLAT_LDFLAGS := $(TARGET_GLOBAL_LDFLAGS)
+PLAT_ARFLAGS := $(TARGET_GLOBAL_ARFLAGS)

@@ -1,0 +1,10 @@
+vec_capture_src=OVERLAP
+vec_capture_inputsrc=VGA
+vec_capture_x=0
+vec_capture_y=0
+vec_capture_w=320
+vec_capture_h=240
+vec_output_h=720
+vec_output_v=480
+vec_framecount_mode=double_mode
+vec_capture_addr=0x794c000

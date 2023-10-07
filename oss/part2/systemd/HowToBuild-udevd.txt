@@ -1,0 +1,76 @@
+
+It depends these 5 libs:
+libcap, libblkid, libmount, libselinux, libpcre2-8
+
+unzip systemd-252.zip
+cd systemd-252
+
+//for meson build
+export DOCKERQ_IMAGE='mtkdocker01:5000/srv_dtv/ubuntu.18.04:latest'
+
+SECURITY_FLAGS="-O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -s -fPIE -pie"
+export LDFLAGS="-L/proj/mtk24932/apollo-prod-2102/oss/source/libcap/2.61/libcap-2.61/result/lib64 -lcap -L/proj/mtk24932/apollo-prod-1902/apollo/oss/library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.37.4/lib -lmount -lblkid -L/proj/mtk24932/apollo-prod-2102/oss/library/gnuarm-10.2.1_neon_ca9/selinux/selinux-2.7/lib -lselinux -L/proj/mtk24932/apollo-prod-2102/oss/library/gnuarm-10.2.1_neon_ca9/libpcre2/v10.40/lib -lpcre2-8 ${SECURITY_FLAGS}"
+export CFLAGS="-I/proj/mtk24932/apollo-prod-2102/oss/source/libcap/2.61/libcap-2.61/result/include -I/proj/mtk24932/apollo-prod-1902/apollo/oss/library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.37.4/include/libmount -I/proj/mtk24932/apollo-prod-1902/apollo/oss/library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.37.4/include/blkid -I/proj/mtk24932/apollo-prod-2102/oss/source/selinux/libselinux/include ${SECURITY_FLAGS}"
+export CPPFLAGS=${SECURITY_FLAGS}
+
+cp meson.build.patch to systemd-252
+cp systemd.patch to systemd-252
+cp cross-file.txt to systemd-252
+
+patch -Nlp0 < meson.build.patch
+patch -Nlp0 < systemd.patch
+
+dockerq meson setup build --cross-file cross-file.txt --prefix "/proj/mtk24932/apollo-prod-2102/oss/source/systemd/252/systemd-252/result" --auto-features disabled
+
+
+Modify build/buid.ninja, remove -rpath setting
+	build udevadm:
+'-Wl,-rpath,$$ORIGIN/src/shared'
+
+
+dockerq meson compile -C build udevadm
+After finish, udevadm is generated in build folder.
+
+dockerq meson compile -C build test-libudev-sym
+build/libudev.so.1.7.5
+
+
+check udevadm dependency libs:
+[mtk24932@mhfsdtcf112 build]$readelf -a udevadm | grep NEEDED
+ 0x00000001 (NEEDED)                     Shared library: [libsystemd-shared-252.so]
+ 0x00000001 (NEEDED)                     Shared library: [libblkid.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libpthread.so.0]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [ld-linux-armhf.so.3]
+
+ 
+check libsystemd-shared-252.so dependency libs:
+[mtk24932@mhfsdtcf112 shared]$readelf -a libsystemd-shared-252.so | grep NEEDED
+ 0x00000001 (NEEDED)                     Shared library: [libcap.so.2]
+ 0x00000001 (NEEDED)                     Shared library: [libmount.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libblkid.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libselinux.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libcrypt.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libdl.so.2]
+ 0x00000001 (NEEDED)                     Shared library: [librt.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libm.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [libpthread.so.0]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [ld-linux-armhf.so.3]
+
+ 
+ check libudev.so.1.7.5 dependency libs:
+[mtk24932@mhfsdtcf112 build]$readelf -a libudev.so.1.7.5 | grep NEEDED
+ 0x00000001 (NEEDED)                     Shared library: [librt.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libpthread.so.0]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [ld-linux-armhf.so.3]
+
+ 
+ 
+ check GCC version
+ strings udevadm | grep GCC
+ 
+ check security flags
+ ~/checksec.sh --file udevadm
+

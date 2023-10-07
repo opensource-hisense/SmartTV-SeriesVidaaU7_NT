@@ -1,0 +1,10 @@
+NAME=openssl
+VERSION=1.1.1q
+URL=http://www.openssl.org/
+LICENSE=Apache License 2.0
+OWNER=ot_xumiao.xu
+SOURCE=oss/source/openssl
+MTK_MODIFY=
+USAGE=Dynamic Link
+INSTALL_PATH=basic
+COMMENT=

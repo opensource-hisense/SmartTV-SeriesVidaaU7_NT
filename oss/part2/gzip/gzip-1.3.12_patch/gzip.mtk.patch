@@ -1,0 +1,48 @@
+diff -urN gzip-1.3.12/gzip.c gzip-1.3.12.mtk/gzip.c
+--- gzip-1.3.12/gzip.c	2007-03-20 13:09:51.000000000 +0800
++++ gzip-1.3.12.mtk/gzip.c	2019-12-05 16:27:38.983140853 +0800
+@@ -54,7 +54,7 @@
+  */
+ 
+ #ifdef RCSID
+-static char rcsid[] = "$Id: gzip.c,v 1.16 2007/03/20 05:09:51 eggert Exp $";
++static char rcsid[] = "$Id: //DTV/PROD_BR/DTV_X_IDTV1501/apollo/oss/source/gzip/gzip-1.3.12_patch/gzip.c#1 $";
+ #endif
+ 
+ #include <config.h>
+@@ -1637,7 +1637,7 @@
+ 	}
+       }
+ 
+-    if (futimens (ofd, ofname, timespec) != 0)
++    if (mtk_futimens (ofd, ofname, timespec) != 0)
+       {
+ 	int e = errno;
+ 	WARN ((stderr, "%s: ", program_name));
+diff -urN gzip-1.3.12/lib/utimens.c gzip-1.3.12.mtk/lib/utimens.c
+--- gzip-1.3.12/lib/utimens.c	2007-01-18 16:33:34.000000000 +0800
++++ gzip-1.3.12.mtk/lib/utimens.c	2019-12-05 16:27:38.987140861 +0800
+@@ -75,7 +75,7 @@
+    Return 0 on success, -1 (setting errno) on failure.  */
+ 
+ int
+-futimens (int fd ATTRIBUTE_UNUSED,
++mtk_futimens (int fd ATTRIBUTE_UNUSED,
+ 	  char const *file, struct timespec const timespec[2])
+ {
+   /* Some Linux-based NFS clients are buggy, and mishandle time stamps
+@@ -185,5 +185,5 @@
+ int
+ utimens (char const *file, struct timespec const timespec[2])
+ {
+-  return futimens (-1, file, timespec);
++  return mtk_futimens (-1, file, timespec);
+ }
+diff -urN gzip-1.3.12/lib/utimens.h gzip-1.3.12.mtk/lib/utimens.h
+--- gzip-1.3.12/lib/utimens.h	2007-02-24 02:25:21.000000000 +0800
++++ gzip-1.3.12.mtk/lib/utimens.h	2019-12-05 16:27:38.991140869 +0800
+@@ -1,3 +1,3 @@
+ #include <time.h>
+-int futimens (int, char const *, struct timespec const [2]);
++int mtk_futimens (int, char const *, struct timespec const [2]);
+ int utimens (char const *, struct timespec const [2]);

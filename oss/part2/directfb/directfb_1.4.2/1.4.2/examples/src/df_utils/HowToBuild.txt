@@ -1,0 +1,6 @@
+Step 1: 
+	Build Supernova or just "source /DAILEO/Supernova/projects/buildsettings/build_XXX.sh"
+	
+Step 2:
+	Type make
+	

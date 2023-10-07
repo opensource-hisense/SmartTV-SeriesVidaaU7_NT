@@ -1,0 +1,17 @@
+--- mDNSResponder-1556.80.2/mDNSShared/PlatformCommon.c.orig	2022-07-04 14:25:49.677561384 +0800
++++ mDNSResponder-1556.80.2/mDNSShared/PlatformCommon.c	2022-07-04 14:26:11.813455136 +0800
+@@ -27,12 +27,12 @@
+ #include <netinet/in.h>         // Needed for sockaddr_in
+ #include <syslog.h>
+ #include <sys/fcntl.h>
++#include <linux/tcp.h>
+-#include <netinet/tcp.h>
+ #include <arpa/inet.h>
+ #include <time.h>
+ #include <sys/time.h>           // Needed for #include <sys/time.h>().
+ #include <assert.h>
++#include <stdint.h>
+-
+ 
+ #include "mDNSEmbeddedAPI.h"    // Defines the interface provided to the client layer above
+ #include "DNSCommon.h"

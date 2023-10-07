@@ -1,0 +1,10 @@
+NAME=mDNSResponder
+VERSION=765.50.9
+URL=https://opensource.apple.com/tarballs/mDNSResponder/
+LICENSE=Apache License, Version 2.0
+OWNER=Jeffrey Kuo
+SOURCE=oss/source/mDNSResponder
+MTK_MODIFY= Yes, to avoid call setuid due to seccomp, avoid fork itself, add GCC secure compile options
+USAGE=Binary
+INSTALL_PATH=/bin/
+COMMENT= support Bonjour Network Discovery and Connectivity for iOS device

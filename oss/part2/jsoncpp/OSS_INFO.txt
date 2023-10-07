@@ -1,0 +1,11 @@
+NAME=jsoncpp
+VERSION=1.6.5
+URL=https://github.com/open-source-parsers/jsoncpp
+LICENSE=MIT
+OWNER=Xiangfei Liu
+SOURCE=oss/source/jsoncpp
+MTK_MODIFY=
+USAGE=Dynamic Link
+INSTALL_PATH=basic
+COMMENT=
+

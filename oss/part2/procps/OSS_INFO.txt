@@ -1,0 +1,10 @@
+NAME=procps (ps, top)
+VERSION=3.3.15
+URL=https://gitlab.com/procps-ng/procps
+LICENSE=GPLv2
+OWNER=jingbo.kuang
+SOURCE=oss/source/procps
+MTK_MODIFY=No
+USAGE=Program
+INSTALL_PATH=openbox/bin
+COMMENT=command for watch system process

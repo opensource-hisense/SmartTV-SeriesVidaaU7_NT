@@ -1,0 +1,10 @@
+NAME=libpugixml
+VERSION=1.8
+URL=http://pugixml.org/
+LICENSE=MIT
+OWNER=steven shan
+SOURCE=oss/source/pugixml
+MTK_MODIFY=No
+USAGE=Dynamic Link
+INSTALL_PATH=lib
+COMMENT=library help to parse XML file

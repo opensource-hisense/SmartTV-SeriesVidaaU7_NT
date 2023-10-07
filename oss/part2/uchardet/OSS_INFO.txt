@@ -1,0 +1,10 @@
+NAME=uchardet
+VERSION=0.0.6
+URL=https://www.freedesktop.org/wiki/Software/uchardet/
+LICENSE=LGPLv2.1
+OWNER=gavin.yuan
+SOURCE=oss/source/uchardet
+MTK_MODIFY= yes
+USAGE=Dynamic Link
+COMMENT= uchardet is an encoding detector library.
+INSTALL_PATH=lib

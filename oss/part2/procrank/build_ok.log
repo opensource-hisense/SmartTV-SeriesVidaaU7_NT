@@ -1,0 +1,27 @@
+Job <62196> is submitted to queue <mosesq>.
+make -C libpagemap
+make[1]: Entering directory `/proj/mtk40759/git_views/oss/apollo/oss/source/procrank/libpagemap'
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -I./include -c  -D_LARGEFILE64_SOURCE    -c -o pm_kernel.o pm_kernel.c
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -I./include -c  -D_LARGEFILE64_SOURCE    -c -o pm_process.o pm_process.c
+[01m[Kpm_process.c:[m[K In function ‘[01m[Kpm_process_workingset[m[K’:
+[01m[Kpm_process.c:180:12:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kj[m[K’ [-Wunused-variable]
+     int i, j;
+[01;32m[K            ^[m[K
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -I./include -c  -D_LARGEFILE64_SOURCE    -c -o pm_map.o pm_map.c
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -I./include -c  -D_LARGEFILE64_SOURCE    -c -o pm_memusage.o pm_memusage.c
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -I./include -c  -D_LARGEFILE64_SOURCE    -c -o strlcpy.o strlcpy.c
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-ar rc libpagemap.a pm_kernel.o pm_process.o pm_map.o pm_memusage.o strlcpy.o
+make[1]: Leaving directory `/proj/mtk40759/git_views/oss/apollo/oss/source/procrank/libpagemap'
+echo "build build procrank"
+build build procrank
+/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc -Wall -Wextra -Wformat=2  procrank.c -Ilibpagemap/include -Llibpagemap -lpagemap -o procrank
+[01m[Kprocrank.c:[m[K In function ‘[01m[Kgetprocname[m[K’:
+[01m[Kprocrank.c:381:9:[m[K [01;35m[Kwarning: [m[Kimplicit declaration of function ‘[01m[Kasprintf[m[K’ [-Wimplicit-function-declaration]
+     if (asprintf(&filename, "/proc/%d/cmdline", pid) < 0) {
+[01;32m[K         ^[m[K
+[01m[Kprocrank.c:408:13:[m[K [01;35m[Kwarning: [m[Kimplicit declaration of function ‘[01m[Kstrlcpy[m[K’ [-Wimplicit-function-declaration]
+         if (strlcpy(buf, unknown_cmdline, (size_t)len) >= (size_t)len) {
+[01;32m[K             ^[m[K
+[01m[Kprocrank.c:408:56:[m[K [01;35m[Kwarning: [m[Kcomparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (strlcpy(buf, unknown_cmdline, (size_t)len) >= (size_t)len) {
+[01;32m[K                                                        ^[m[K

@@ -1,0 +1,10 @@
+NAME=googletest
+VERSION=1.7.0
+https://github.com/google/googletest
+LICENSE=BSD-3
+OWNER=mi.fang
+SOURCE=oss/source/googletest
+MTK_MODIFY=No
+USAGE=Program/Dynamic
+INSTALL_PATH=/basic/lib
+COMMENT=Googles C++ test framework

@@ -1,0 +1,534 @@
+From 4961b8661c88d862c2a30fb4184d1d2cff98ef0d Mon Sep 17 00:00:00 2001
+From: johnjamesmccann <98098904+johnjamesmccann@users.noreply.github.com>
+Date: Thu, 20 Jan 2022 14:39:09 +0000
+Subject: [PATCH] Fix potential double-free in usage of ReaderMgr::pushReader()
+
+The fix consists in adding a new argument to pushReader() to specify if
+ReaderMgr must own the passed entity, and adapt callers to specify the
+right value of this ownership flag depending on the calling context.
+
+SPDX-FileCopyrightText: Portions Copyright 2021 Siemens
+Modified on 15-Jul-2021 by Siemens and/or its affiliates to fix CVE-2018-1311: Apache Xerces-C use-after-free vulnerability scanning external DTD. Copyright 2021 Siemens.
+
+Co-authored-by: Even Rouault <even.rouault@spatialys.com>
+---
+ src/xercesc/internal/DGXMLScanner.cpp     | 14 ++---
+ src/xercesc/internal/IGXMLScanner.cpp     |  9 +--
+ src/xercesc/internal/IGXMLScanner2.cpp    |  6 +-
+ src/xercesc/internal/ReaderMgr.cpp        | 73 +++++++++++++++--------
+ src/xercesc/internal/ReaderMgr.hpp        | 45 +++++++++++++-
+ src/xercesc/internal/SGXMLScanner.cpp     |  2 +-
+ src/xercesc/internal/WFXMLScanner.cpp     |  2 +-
+ src/xercesc/internal/XSAXMLScanner.cpp    |  2 +-
+ src/xercesc/validators/DTD/DTDScanner.cpp |  8 +--
+ 9 files changed, 113 insertions(+), 48 deletions(-)
+
+diff --git a/src/xercesc/internal/DGXMLScanner.cpp b/src/xercesc/internal/DGXMLScanner.cpp
+index 38e58f49a..d9a55b16d 100644
+--- a/src/xercesc/internal/DGXMLScanner.cpp
++++ b/src/xercesc/internal/DGXMLScanner.cpp
+@@ -19,6 +19,8 @@
+  * $Id$
+  */
+ 
++// SPDX-FileCopyrightText: Portions Copyright 2021 Siemens 
++// Modified on 15-Jul-2021 by Siemens and/or its affiliates to fix CVE-2018-1311: Apache Xerces-C use-after-free vulnerability scanning external DTD. Copyright 2021 Siemens.
+ 
+ // ---------------------------------------------------------------------------
+ //  Includes
+@@ -1052,13 +1054,12 @@ void DGXMLScanner::scanDocTypeDecl()
+             DTDEntityDecl* declDTD = new (fMemoryManager) DTDEntityDecl(gDTDStr, false, fMemoryManager);
+             declDTD->setSystemId(sysId);
+             declDTD->setIsExternal(true);
+-            Janitor<DTDEntityDecl> janDecl(declDTD);
+ 
+             // Mark this one as a throw at end
+             reader->setThrowAtEnd(true);
+ 
+             // And push it onto the stack, with its pseudo name
+-            fReaderMgr.pushReader(reader, declDTD);
++            fReaderMgr.pushReader(reader, declDTD, true);
+ 
+             // Tell it its not in an include section
+             dtdScanner.scanExtSubsetDecl(false, true);
+@@ -2131,13 +2132,12 @@ Grammar* DGXMLScanner::loadDTDGrammar(const InputSource& src,
+     DTDEntityDecl* declDTD = new (fMemoryManager) DTDEntityDecl(gDTDStr, false, fMemoryManager);
+     declDTD->setSystemId(src.getSystemId());
+     declDTD->setIsExternal(true);
+-    Janitor<DTDEntityDecl> janDecl(declDTD);
+ 
+     // Mark this one as a throw at end
+     newReader->setThrowAtEnd(true);
+ 
+     // And push it onto the stack, with its pseudo name
+-    fReaderMgr.pushReader(newReader, declDTD);
++    fReaderMgr.pushReader(newReader, declDTD, true);
+ 
+     //  If we have a doc type handler and advanced callbacks are enabled,
+     //  call the doctype event.
+@@ -2476,7 +2476,7 @@ void DGXMLScanner::scanReset(const InputSource& src)
+     }
+ 
+     // Push this read onto the reader manager
+-    fReaderMgr.pushReader(newReader, 0);
++    fReaderMgr.pushReader(newReader, 0, false);
+ 
+     // and reset security-related things if necessary:
+     if(fSecurityManager != 0)
+@@ -3481,7 +3481,7 @@ DGXMLScanner::scanEntityRef(  const   bool    inAttVal
+ 
+         //  Push the reader. If its a recursive expansion, then emit an error
+         //  and return an failure.
+-        if (!fReaderMgr.pushReader(reader, decl))
++        if (!fReaderMgr.pushReader(reader, decl, false))
+         {
+             emitError(XMLErrs::RecursiveEntity, decl->getName());
+             return EntityExp_Failed;
+@@ -3542,7 +3542,7 @@ DGXMLScanner::scanEntityRef(  const   bool    inAttVal
+         //  where it will become the subsequent input. If it fails, that
+         //  means the entity is recursive, so issue an error. The reader
+         //  will have just been discarded, but we just keep going.
+-        if (!fReaderMgr.pushReader(valueReader, decl))
++        if (!fReaderMgr.pushReader(valueReader, decl, false))
+             emitError(XMLErrs::RecursiveEntity, decl->getName());
+ 
+         // here's where we need to check if there's a SecurityManager,
+diff --git a/src/xercesc/internal/IGXMLScanner.cpp b/src/xercesc/internal/IGXMLScanner.cpp
+index 4417d44a0..529523935 100644
+--- a/src/xercesc/internal/IGXMLScanner.cpp
++++ b/src/xercesc/internal/IGXMLScanner.cpp
+@@ -19,6 +19,9 @@
+  * $Id$
+  */
+ 
++// SPDX-FileCopyrightText: Portions Copyright 2021 Siemens 
++// Modified on 15-Jul-2021 by Siemens and/or its affiliates to fix CVE-2018-1311: Apache Xerces-C use-after-free vulnerability scanning external DTD. Copyright 2021 Siemens.
++
+ // ---------------------------------------------------------------------------
+ //  Includes
+ // ---------------------------------------------------------------------------
+@@ -1535,13 +1538,12 @@ void IGXMLScanner::scanDocTypeDecl()
+             DTDEntityDecl* declDTD = new (fMemoryManager) DTDEntityDecl(gDTDStr, false, fMemoryManager);
+             declDTD->setSystemId(sysId);
+             declDTD->setIsExternal(true);
+-            Janitor<DTDEntityDecl> janDecl(declDTD);
+ 
+             // Mark this one as a throw at end
+             reader->setThrowAtEnd(true);
+ 
+             // And push it onto the stack, with its pseudo name
+-            fReaderMgr.pushReader(reader, declDTD);
++            fReaderMgr.pushReader(reader, declDTD, true);
+ 
+             // Tell it its not in an include section
+             dtdScanner.scanExtSubsetDecl(false, true);
+@@ -3098,13 +3100,12 @@ Grammar* IGXMLScanner::loadDTDGrammar(const InputSource& src,
+     DTDEntityDecl* declDTD = new (fMemoryManager) DTDEntityDecl(gDTDStr, false, fMemoryManager);
+     declDTD->setSystemId(src.getSystemId());
+     declDTD->setIsExternal(true);
+-    Janitor<DTDEntityDecl> janDecl(declDTD);
+ 
+     // Mark this one as a throw at end
+     newReader->setThrowAtEnd(true);
+ 
+     // And push it onto the stack, with its pseudo name
+-    fReaderMgr.pushReader(newReader, declDTD);
++    fReaderMgr.pushReader(newReader, declDTD, true);
+ 
+     //  If we have a doc type handler and advanced callbacks are enabled,
+     //  call the doctype event.
+diff --git a/src/xercesc/internal/IGXMLScanner2.cpp b/src/xercesc/internal/IGXMLScanner2.cpp
+index 4c043eff7..703bf914a 100644
+--- a/src/xercesc/internal/IGXMLScanner2.cpp
++++ b/src/xercesc/internal/IGXMLScanner2.cpp
+@@ -1302,7 +1302,7 @@ void IGXMLScanner::scanReset(const InputSource& src)
+     }
+ 
+     // Push this read onto the reader manager
+-    fReaderMgr.pushReader(newReader, 0);
++    fReaderMgr.pushReader(newReader, 0, false);
+ 
+     // and reset security-related things if necessary:
+     if(fSecurityManager != 0)
+@@ -3201,7 +3201,7 @@ IGXMLScanner::scanEntityRef(  const   bool    inAttVal
+ 
+         //  Push the reader. If its a recursive expansion, then emit an error
+         //  and return an failure.
+-        if (!fReaderMgr.pushReader(reader, decl))
++        if (!fReaderMgr.pushReader(reader, decl, false))
+         {
+             emitError(XMLErrs::RecursiveEntity, decl->getName());
+             return EntityExp_Failed;
+@@ -3262,7 +3262,7 @@ IGXMLScanner::scanEntityRef(  const   bool    inAttVal
+         //  where it will become the subsequent input. If it fails, that
+         //  means the entity is recursive, so issue an error. The reader
+         //  will have just been discarded, but we just keep going.
+-        if (!fReaderMgr.pushReader(valueReader, decl))
++        if (!fReaderMgr.pushReader(valueReader, decl, false))
+             emitError(XMLErrs::RecursiveEntity, decl->getName());
+ 
+         // here's where we need to check if there's a SecurityManager,
+diff --git a/src/xercesc/internal/ReaderMgr.cpp b/src/xercesc/internal/ReaderMgr.cpp
+index 4e59a4a19..1ce5b036b 100644
+--- a/src/xercesc/internal/ReaderMgr.cpp
++++ b/src/xercesc/internal/ReaderMgr.cpp
+@@ -51,9 +51,9 @@ namespace XERCES_CPP_NAMESPACE {
+ ReaderMgr::ReaderMgr(MemoryManager* const manager) :
+ 
+     fCurEntity(0)
++    , fOwnEntity(false)
+     , fCurReader(0)
+     , fEntityHandler(0)
+-    , fEntityStack(0)
+     , fNextReaderNum(1)
+     , fReaderStack(0)
+     , fThrowEOE(false)
+@@ -72,8 +72,9 @@ ReaderMgr::~ReaderMgr()
+     //  entities it still references!)
+     //
+     delete fCurReader;
++    if (fOwnEntity)
++        delete fCurEntity;
+     delete fReaderStack;
+-    delete fEntityStack;
+ }
+ 
+ 
+@@ -357,9 +358,7 @@ void ReaderMgr::cleanStackBackTo(const XMLSize_t readerNum)
+         if (fReaderStack->empty())
+             ThrowXMLwithMemMgr(RuntimeException, XMLExcepts::RdrMgr_ReaderIdNotFound, fMemoryManager);
+ 
+-        delete fCurReader;
+-        fCurReader = fReaderStack->pop();
+-        fCurEntity = fEntityStack->pop();
++        popReaderAndEntity();
+     }
+ }
+ 
+@@ -814,7 +813,7 @@ XMLEntityDecl* ReaderMgr::getCurrentEntity()
+ XMLSize_t ReaderMgr::getReaderDepth() const
+ {
+     // If the stack doesn't exist, its obviously zero
+-    if (!fEntityStack)
++    if (fEntityStack.empty())
+         return 0;
+ 
+     //
+@@ -822,7 +821,7 @@ XMLSize_t ReaderMgr::getReaderDepth() const
+     //  reader. So if there is no current reader and none on the stack,
+     //  its zero, else its some non-zero value.
+     //
+-    XMLSize_t retVal = fEntityStack->size();
++    XMLSize_t retVal = fEntityStack.size();
+     if (fCurReader)
+         retVal++;
+     return retVal;
+@@ -874,8 +873,12 @@ bool ReaderMgr::isScanningPERefOutOfLiteral() const
+ }
+ 
+ 
++// Caller should set transferEntityOwnership to true if the ReaderMgr object
++// should assume ownership of the passed entity, and delete it when it no
++// longer needs it.
+ bool ReaderMgr::pushReader(         XMLReader* const        reader
+-                            ,       XMLEntityDecl* const    entity)
++                            ,       XMLEntityDecl* const    entity
++                            ,       bool                    transferEntityOwnership)
+ {
+     //
+     //  First, if an entity was passed, we have to confirm that this entity
+@@ -887,19 +890,21 @@ bool ReaderMgr::pushReader(         XMLReader* const        reader
+     //  nothing to do. If there is no entity stack yet, then of coures it
+     //  cannot already be there.
+     //
+-    if (entity && fEntityStack)
++    if (entity && !fEntityStack.empty())
+     {
+-        const XMLSize_t count = fEntityStack->size();
++        const XMLSize_t count = fEntityStack.size();
+         const XMLCh* const theName = entity->getName();
+         for (XMLSize_t index = 0; index < count; index++)
+         {
+-            const XMLEntityDecl* curDecl = fEntityStack->elementAt(index);
++            const XMLEntityDecl* curDecl = fEntityStack[index];
+             if (curDecl)
+             {
+                 if (XMLString::equals(theName, curDecl->getName()))
+                 {
+                     // Oops, already there so delete reader and return
+                     delete reader;
++                    if (transferEntityOwnership)
++                        delete entity;
+                     return false;
+                 }
+             }
+@@ -913,10 +918,6 @@ bool ReaderMgr::pushReader(         XMLReader* const        reader
+     if (!fReaderStack)
+         fReaderStack = new (fMemoryManager) RefStackOf<XMLReader>(16, true, fMemoryManager);
+ 
+-    // And the entity stack, which does not own its elements
+-    if (!fEntityStack)
+-        fEntityStack = new (fMemoryManager) RefStackOf<XMLEntityDecl>(16, false, fMemoryManager);
+-
+     //
+     //  Push the current reader and entity onto their respective stacks.
+     //  Note that the the current entity can be null if the current reader
+@@ -925,7 +926,7 @@ bool ReaderMgr::pushReader(         XMLReader* const        reader
+     if (fCurReader)
+     {
+         fReaderStack->push(fCurReader);
+-        fEntityStack->push(fCurEntity);
++        fEntityStack.emplace_back(EntityPtrWithOwnershipFlag(fCurEntity, fOwnEntity));
+     }
+ 
+     //
+@@ -934,6 +935,7 @@ bool ReaderMgr::pushReader(         XMLReader* const        reader
+     //
+     fCurReader = reader;
+     fCurEntity = entity;
++    fOwnEntity = transferEntityOwnership;
+ 
+     return true;
+ }
+@@ -954,9 +956,11 @@ void ReaderMgr::reset()
+     //  And do the same for the entity stack, but don't delete the current
+     //  entity (if any) since we don't own them.
+     //
++    if (fOwnEntity)
++        delete fCurEntity;
+     fCurEntity = 0;
+-    if (fEntityStack)
+-        fEntityStack->removeAllElements();
++    fOwnEntity = false;
++    fEntityStack.clear();
+ }
+ 
+ 
+@@ -1030,7 +1034,7 @@ ReaderMgr::getLastExtEntity(const XMLEntityDecl*& itsEntity) const
+             {
+                 // Move down to the previous element and get a pointer to it
+                 index--;
+-                curEntity = fEntityStack->elementAt(index);
++                curEntity = fEntityStack[index];
+ 
+                 //
+                 //  If its null or its an external entity, then this reader
+@@ -1059,6 +1063,21 @@ ReaderMgr::getLastExtEntity(const XMLEntityDecl*& itsEntity) const
+ }
+ 
+ 
++void ReaderMgr::popReaderAndEntity()
++{
++    delete fCurReader;
++    fCurReader = fReaderStack->pop();
++
++    if (fOwnEntity)
++        delete fCurEntity;
++    fCurEntity = fEntityStack.back().fEntity;
++    fOwnEntity = fEntityStack.back().fOwnEntity;
++    // Make sure to disown the last entity before trimming the stack.
++    fEntityStack.back().fOwnEntity = false;
++    fEntityStack.resize(fEntityStack.size() - 1);
++}
++
++
+ bool ReaderMgr::popReader()
+ {
+     //
+@@ -1080,10 +1099,7 @@ bool ReaderMgr::popReader()
+     //  Delete the current reader and pop a new reader and entity off
+     //  the stacks.
+     //
+-    delete fCurReader;
+-    fCurReader = fReaderStack->pop();
+-    fCurEntity = fEntityStack->pop();
+-
++    popReaderAndEntity();
+     //
+     //  If there was a previous entity, and either the fThrowEOE flag is set
+     //  or reader was marked as such, then throw an end of entity.
+@@ -1119,11 +1135,16 @@ bool ReaderMgr::popReader()
+             return false;
+ 
+         // Else pop again and try it one more time
+-        delete fCurReader;
+-        fCurReader = fReaderStack->pop();
+-        fCurEntity = fEntityStack->pop();
++        popReaderAndEntity();
+     }
+     return true;
+ }
+ 
++
++ReaderMgr::EntityPtrWithOwnershipFlag::~EntityPtrWithOwnershipFlag()
++{
++    if (fOwnEntity)
++        delete fEntity;
++}
++
+ XERCES_CPP_NAMESPACE_END
+diff --git a/src/xercesc/internal/ReaderMgr.hpp b/src/xercesc/internal/ReaderMgr.hpp
+index d362af566..c15e09f9b 100644
+--- a/src/xercesc/internal/ReaderMgr.hpp
++++ b/src/xercesc/internal/ReaderMgr.hpp
+@@ -28,6 +28,8 @@
+ #include <xercesc/sax/Locator.hpp>
+ #include <xercesc/framework/XMLBuffer.hpp>
+ 
++#include <vector>
++
+ XERCES_CPP_NAMESPACE_BEGIN
+ 
+ class XMLEntityDecl;
+@@ -159,6 +161,7 @@ public :
+     (
+                 XMLReader* const        reader
+         ,       XMLEntityDecl* const    entity
++        ,       bool                    transferEntityOwnership
+     );
+     void reset();
+ 
+@@ -202,6 +205,8 @@ private :
+     const XMLReader* getLastExtEntity(const XMLEntityDecl*& itsEntity) const;
+     bool popReader();
+ 
++    void popReaderAndEntity();
++
+     // -----------------------------------------------------------------------
+     //  Unimplemented constructors and operators
+     // -----------------------------------------------------------------------
+@@ -215,6 +220,10 @@ private :
+     //      This is the current top of stack entity. We pull it off the stack
+     //      and store it here for efficiency.
+     //
++    //  fOwnEntity
++    //      This is set to true if we own fCurEntity and should delete it when
++    //      we no longer need it.
++    //
+     //  fCurReader
+     //      This is the current top of stack reader. We pull it off the
+     //      stack and store it here for efficiency.
+@@ -253,9 +262,43 @@ private :
+     //      This flag controls whether we force conformant URI
+     // -----------------------------------------------------------------------
+     XMLEntityDecl*              fCurEntity;
++    bool                        fOwnEntity;
+     XMLReader*                  fCurReader;
+     XMLEntityHandler*           fEntityHandler;
+-    RefStackOf<XMLEntityDecl>*  fEntityStack;
++
++    // Kind of std::unique_ptr except that we don't always have ownership
++    struct EntityPtrWithOwnershipFlag
++    {
++        XMLEntityDecl* fEntity = nullptr;
++        bool           fOwnEntity = false;
++
++        EntityPtrWithOwnershipFlag() = default;
++
++        EntityPtrWithOwnershipFlag(XMLEntityDecl* entity, bool ownEntity):
++            fEntity(entity), fOwnEntity(ownEntity) {}
++
++        EntityPtrWithOwnershipFlag(EntityPtrWithOwnershipFlag&& other):
++            fEntity(other.fEntity), fOwnEntity(other.fOwnEntity)
++        {
++            other.fOwnEntity = false;
++        }
++
++        EntityPtrWithOwnershipFlag(const EntityPtrWithOwnershipFlag&) = delete;
++        EntityPtrWithOwnershipFlag& operator=(const EntityPtrWithOwnershipFlag&) = delete;
++        EntityPtrWithOwnershipFlag& operator=(EntityPtrWithOwnershipFlag&&) = delete;
++
++        ~EntityPtrWithOwnershipFlag();
++
++        operator XMLEntityDecl*() {
++            return fEntity;
++        }
++
++        operator const XMLEntityDecl*() const {
++            return fEntity;
++        }
++    };
++
++    std::vector<EntityPtrWithOwnershipFlag> fEntityStack;
+     unsigned int                fNextReaderNum;
+     RefStackOf<XMLReader>*      fReaderStack;
+     bool                        fThrowEOE;
+diff --git a/src/xercesc/internal/SGXMLScanner.cpp b/src/xercesc/internal/SGXMLScanner.cpp
+index f43c6936d..481e2b104 100644
+--- a/src/xercesc/internal/SGXMLScanner.cpp
++++ b/src/xercesc/internal/SGXMLScanner.cpp
+@@ -3177,7 +3177,7 @@ void SGXMLScanner::scanReset(const InputSource& src)
+     }
+ 
+     // Push this read onto the reader manager
+-    fReaderMgr.pushReader(newReader, 0);
++    fReaderMgr.pushReader(newReader, 0, false);
+ 
+     // and reset security-related things if necessary:
+     if(fSecurityManager != 0)
+diff --git a/src/xercesc/internal/WFXMLScanner.cpp b/src/xercesc/internal/WFXMLScanner.cpp
+index cc1e8a387..0f34e0c3d 100644
+--- a/src/xercesc/internal/WFXMLScanner.cpp
++++ b/src/xercesc/internal/WFXMLScanner.cpp
+@@ -501,7 +501,7 @@ void WFXMLScanner::scanReset(const InputSource& src)
+     }
+ 
+     // Push this read onto the reader manager
+-    fReaderMgr.pushReader(newReader, 0);
++    fReaderMgr.pushReader(newReader, 0, false);
+ 
+     // and reset security-related things if necessary:
+     if(fSecurityManager != 0) 
+diff --git a/src/xercesc/internal/XSAXMLScanner.cpp b/src/xercesc/internal/XSAXMLScanner.cpp
+index bb63c23c4..f7cdad3b3 100644
+--- a/src/xercesc/internal/XSAXMLScanner.cpp
++++ b/src/xercesc/internal/XSAXMLScanner.cpp
+@@ -586,7 +586,7 @@ void XSAXMLScanner::scanReset(const InputSource& src)
+     }
+ 
+     // Push this read onto the reader manager
+-    fReaderMgr.pushReader(newReader, 0);
++    fReaderMgr.pushReader(newReader, 0, false);
+ 
+     // and reset security-related things if necessary:
+     if(fSecurityManager != 0)
+diff --git a/src/xercesc/validators/DTD/DTDScanner.cpp b/src/xercesc/validators/DTD/DTDScanner.cpp
+index 775e503d4..2791a3741 100644
+--- a/src/xercesc/validators/DTD/DTDScanner.cpp
++++ b/src/xercesc/validators/DTD/DTDScanner.cpp
+@@ -288,7 +288,7 @@ bool DTDScanner::expandPERef( const   bool    scanExternal
+         //  Push the reader. If its a recursive expansion, then emit an error
+         //  and return an failure.
+         //
+-        if (!fReaderMgr->pushReader(reader, decl))
++        if (!fReaderMgr->pushReader(reader, decl, false))
+         {
+             fScanner->emitError(XMLErrs::RecursiveEntity, decl->getName());
+             return false;
+@@ -362,7 +362,7 @@ bool DTDScanner::expandPERef( const   bool    scanExternal
+         //  means the entity is recursive, so issue an error. The reader
+         //  will have just been discarded, but we just keep going.
+         //
+-        if (!fReaderMgr->pushReader(valueReader, decl))
++        if (!fReaderMgr->pushReader(valueReader, decl, false))
+             fScanner->emitError(XMLErrs::RecursiveEntity, decl->getName());
+     }
+ 
+@@ -2054,7 +2054,7 @@ DTDScanner::scanEntityRef(XMLCh& firstCh, XMLCh& secondCh, bool& escaped)
+         //  Push the reader. If its a recursive expansion, then emit an error
+         //  and return an failure.
+         //
+-        if (!fReaderMgr->pushReader(reader, decl))
++        if (!fReaderMgr->pushReader(reader, decl, false))
+         {
+             fScanner->emitError(XMLErrs::RecursiveEntity, decl->getName());
+             return EntityExp_Failed;
+@@ -2088,7 +2088,7 @@ DTDScanner::scanEntityRef(XMLCh& firstCh, XMLCh& secondCh, bool& escaped)
+         //  means the entity is recursive, so issue an error. The reader
+         //  will have just been discarded, but we just keep going.
+         //
+-        if (!fReaderMgr->pushReader(valueReader, decl))
++        if (!fReaderMgr->pushReader(valueReader, decl, false))
+             fScanner->emitError(XMLErrs::RecursiveEntity, decl->getName());
+     }
+ 

@@ -1,0 +1,11 @@
+NAME=libmtp
+VERSION=1.1.18
+URL=http://libmtp.sourceforge.net/
+LICENSE=LGPLv2.1
+OWNER=xiuqin.wang
+SOURCE=oss/source/mtp
+MTK_MODIFY=Yes
+USAGE=Dynamic Link
+COMMENT=c runtime library
+RELEASE_SOURCE=Yes
+INSTALL_PATH=basic

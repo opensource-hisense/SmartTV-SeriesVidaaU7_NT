@@ -1,0 +1,5 @@
+[project options]
+prefix='$(pwd)/../../systemd/systemd-250/result'
+
+[binaries]
+c='/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-gcc'

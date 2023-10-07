@@ -1,0 +1,17 @@
+1. Untar
+  $ tar zxvf mDNSResponder-765.50.9.tar.gz
+
+2. Copy Makefile.mtk to mDNSPosix
+  $ cp Makefile.mtk mDNSResponder-765.50.9/mDNSPosix/Makefile
+
+3. Patch due to Seccomp block syscall
+  $ patch -p0 < patch.mtk
+
+4. Build
+  $ cd mDNSResponder-765.50.9/mDNSPosix/
+  $ make os=linux
+
+5. Install
+  $ cp build/prod/mdnsd ../../../../../library/gnuarm-5.5.0_neon_ca9/mDNSResponder/765.50.9/bin/
+  $ cp build/prod/libdns_sd.so ../../../../../library/gnuarm-5.5.0_neon_ca9/mDNSResponder/765.50.9/lib
+  $ cp ../mDNSShared/*.h ../../../../../library/gnuarm-5.5.0_neon_ca9/mDNSResponder/765.50.9/include/

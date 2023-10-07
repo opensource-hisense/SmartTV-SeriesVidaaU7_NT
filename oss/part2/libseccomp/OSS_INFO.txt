@@ -1,0 +1,10 @@
+NAME=libseccomp
+VERSION=2.4.2
+URL=https://github.com/seccomp/libseccomp
+LICENSE=LGPLv2.1
+OWNER=spark.chen
+SOURCE=oss/source/libseccomp
+MTK_MODIFY=No
+USAGE=Dynamic Link
+INSTALL_PATH=/basic/lib
+COMMENT=Userspace library and utils for seccomp

@@ -1,0 +1,17 @@
+tar -zxvf libmtp-1.1.18.tar.gz
+cd libmtp-1.1.18
+patch -Nlp0 < ../libmtp-1.1.18.patch
+
+CC_FULLPATH=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64
+CC_TOOL=bin/arm-linux-gnueabi-gcc
+
+LIBUSB_COMPAT_PATH=$(pwd)/../../../library/gnuarm-5.5.0_neon_ca9/mtp/libusb-compat-0.1.2
+(Important step: cp libusb-0.1.so to libusb.so)
+LIBUSB_PATH=$(pwd)/../../../library/gnuarm-5.5.0_neon_ca9/mtp/libusb-1.0.2
+HEADFILE_PATH="-O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -s -fPIE -pie -I${LIBUSB_COMPAT_PATH}/include -I${LIBUSB_PATH}/include"
+LINKLIB_PATH="-L${LIBUSB_COMPAT_PATH}/lib -lusb  -L${LIBUSB_PATH}/lib -lusb-1.0"
+
+./configure CC=${CC_FULLPATH}/${CC_TOOL} --host=arm-linux --prefix=$(pwd)/result  LDFLAGS="${LINKLIB_PATH}" CFLAGS="${HEADFILE_PATH}"
+dockerq make
+//here occur build error, but we can ignore it, because libmtp.so is produced.
+dockerq make install

@@ -1,0 +1,19 @@
+Install the OSS,
+    $make all
+    $make install
+
+Remove OSS,
+    $make clean
+    $make uninstall
+
+
+PS, only the mtk_util, mtk_mount is exported to the platform.
+    To make mtk_util, one should follow the steps listed below
+   1. Install libavb
+   2. Install libcutils
+   3. Install ext4_utils
+   4. Install libcrypto_utils
+   5. Install squashfs_utils
+   6. Install libfec
+   7. Install fs_mgr
+   8. Install mtk_mount under mtk_util

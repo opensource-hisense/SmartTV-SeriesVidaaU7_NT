@@ -1,0 +1,11 @@
+NAME=xerces
+VERSION=3.2.3
+URL=http://xerces.apache.org/
+LICENSE=Apache License 2.0
+OWNER=Theo.Hu
+SOURCE=oss/source/xerces
+MTK_MODIFY=YES
+USAGE=Dynamic Link
+INSTALL_PATH=3rd
+COMMENT=c runtime library
+RELEASE_SOURCE=Yes

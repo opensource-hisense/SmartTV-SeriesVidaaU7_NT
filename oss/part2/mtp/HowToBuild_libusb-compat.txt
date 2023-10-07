@@ -1,0 +1,12 @@
+tar -xf libusb-compat-0.1.2.tar
+cd libusb-compat-0.1.2
+chmod 777 configure
+CC_FULLPATH=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64
+CC_TOOL=bin/arm-linux-gnueabi-gcc
+LIBUSB_PATH=$(pwd)/../libusb-1.0.2/result
+HEADFILE_PATH="-I${LIBUSB_PATH}/include/libusb-1.0"
+LINKLIB_PATH="-L${LIBUSB_PATH}/lib"
+SPECIAL_FLAG="-O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -s -fPIE -pie"
+./configure CC=${CC_FULLPATH}/${CC_TOOL} --host=arm-linux --prefix=$(pwd)/result  LIBUSB_1_0_CFLAGS=${HEADFILE_PATH} LIBUSB_1_0_LIBS=${LINKLIB_PATH} LDFLAGS="${SPECIAL_FLAG}" CFLAGS="${SPECIAL_FLAG}"
+make
+make install

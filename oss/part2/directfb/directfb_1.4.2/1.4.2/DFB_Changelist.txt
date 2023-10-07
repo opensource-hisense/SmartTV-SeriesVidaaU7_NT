@@ -1,0 +1,20 @@
+===========================================================================
+ [2012.05.31] Release Version 1.4.2
+
+ DFB official source version: 1.4.2
+ Release DFB lib based on code base CL#593731.
+ Summary:
+ 1. Fix the bug: jpeg&png hw decode doesn't release the temp surface due to the reference count doesn't drop to ZERO. (CL#576571)
+ 2. Fix format YUV stretchblit color incorrect issue (CL#586715)
+ 3. Fix bug on jpeg decode for multithread condiction. (CL#593339)
+
+===========================================================================
+ [2012.04.27] Release Version 1.4.2
+
+ DFB official source version: 1.4.2
+ Release DFB lib based on code base CL#572832.
+ Summary:
+ 1. Fix coverity critical warnings. 
+ 2. Refine the patch of stretch blit to use less memory temp buffer.  
+ 3. Support OP mode to reset layer size. 
+ 4. Fix and refine the HW JPG flow to avoid using the SW decode. 

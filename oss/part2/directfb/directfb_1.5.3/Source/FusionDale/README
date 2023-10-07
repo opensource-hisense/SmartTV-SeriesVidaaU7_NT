@@ -1,0 +1,10 @@
+FusionDale
+----------
+
+FusionDale is applied Fusion and will be a collection of different
+services for use by applications and other libraries.
+
+At the moment it only contains a messaging API for notifications
+and data distribution using shared memory with lifecycle management.
+The attached data is freed after all recipients have processed the
+message, or exited, or died.

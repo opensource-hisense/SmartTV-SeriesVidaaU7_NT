@@ -1,0 +1,10 @@
+NAME=alsa_lib
+VERSION=1.1.4
+URL=https://www.alsa-project.org/
+LICENSE=LGPLv2.1
+OWNER=stanley.su
+SOURCE=oss/source/alsa
+MTK_MODIFY=N
+USAGE=Dynamic Link
+INSTALL_PATH=/basic/lib
+COMMENT=The Advanced Linux Sound Architecture (ALSA) provides audio and MIDI functionality to the Linux operating system.

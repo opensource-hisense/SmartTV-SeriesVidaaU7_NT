@@ -1,0 +1,523 @@
+From 091c506541aadb54024dbbabcea1ab03f6c52cd5 Mon Sep 17 00:00:00 2001
+From: Kim Ballance <kballance@apple.com>
+Date: Fri, 15 Apr 2022 11:52:30 -0700
+Subject: [PATCH] Add WOLAN functionality
+
+---
+ mDNSPosix/Makefile    |  11 +-
+ mDNSPosix/mDNSPosix.c | 405 ++++++++++++++++++++++++++++++++++++++++++
+ mDNSPosix/mDNSPosix.h |  12 ++
+ 3 files changed, 427 insertions(+), 1 deletion(-)
+
+diff --git a/mDNSResponder-1556.80.2/mDNSPosix/Makefile b/mDNSResponder-1556.80.2/mDNSPosix/Makefile
+index 802a13d..3647649 100755
+--- a/mDNSResponder-1556.80.2/mDNSPosix/Makefile
++++ b/mDNSResponder-1556.80.2/mDNSPosix/Makefile
+@@ -114,7 +114,8 @@ CFLAGS_OS = -D_GNU_SOURCE -DHAVE_IPV6 -DNOT_HAVE_SA_LEN -DUSES_NETLINK -DHAVE_LI
+ TLSOBJS =
+ else
+ CFLAGS_OS = -D_GNU_SOURCE -DHAVE_IPV6 -DNOT_HAVE_SA_LEN -DUSES_NETLINK -DHAVE_LINUX -DTARGET_OS_LINUX -DPOSIX_HAS_TLS -ftabstop=4 -Wno-expansion-to-defined
+-TLSOBJS = $(OBJDIR)/mbedtls.c.o -lmbedtls -lmbedcrypto
++TLSOBJS = $(OBJDIR)/mbedtls.c.o
++LINKOPTS += -Wl,--start-group -lmbedtls -lmbedcrypto -lmbedx509 -Wl,--end-group
+ endif
+ LD = $(CC)
+ SOOPTS = -shared
+@@ -201,6 +202,14 @@ CFLAGS_OS += -DHAVE_IPV6=0
+ endif
+ endif
+ 
++ifeq ($(HAVE_LPM_LISTENER),1)
++CFLAGS_OS += -DHAVE_LPM_LISTENER=1
++else
++ifeq ($(HAVE_LPM_LISTENER),0)
++CFLAGS_OS += -DHAVE_LPM_LISTENER=0
++endif
++endif
++
+ # If directory /usr/share/man exists, then we install man pages into that, else /usr/man
+ ifeq ($(wildcard /usr/share/man), /usr/share/man)
+ MANPATH := /usr/share/man
+diff --git a/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.c b/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.c
+index a467078..385c297 100644
+--- a/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.c
++++ b/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.c
+@@ -41,6 +41,10 @@
+ #include <time.h>                   // platform support for UTC time
+ #include <ifaddrs.h>
+ 
++#if HAVE_LPM_LISTENER
++#include <sys/un.h>
++#endif
++
+ #if USES_NETLINK
+ #include <asm/types.h>
+ #include <linux/netlink.h>
+@@ -1385,6 +1389,12 @@ mDNSlocal int SetupOneInterface(mDNS *const m, struct sockaddr *intfAddr, struct
+         intf->coreIntf.Advertise = m->AdvertiseLocalAddresses;
+         intf->coreIntf.McastTxRx = mDNStrue;
+ 
++#if HAVE_LPM_LISTENER
++        // WoL support is sometimes misreported (ethtool / iw phyX wowlan show).
++        // When using the low power mode control mechanism, we assume that all interfaces support WoL.
++        intf->coreIntf.NetWake = mDNStrue;
++#endif
++
+         // Set up the extra fields in PosixNetworkInterface.
+         assert(intf->intfName != NULL);         // intf->intfName already set up above
+         intf->index                = intfIndex;
+@@ -1812,6 +1822,338 @@ mDNSlocal mDNSBool mDNSPlatformInit_CanReceiveUnicast(void)
+     return(err == 0);
+ }
+ 
++
++#if HAVE_LPM_LISTENER
++
++// The low power mode state can be communicated by a different system process.
++// This ensures that services that have been registered get transferred to a Bonjour Sleep Proxy, if available.
++//
++// Communication happens using an abstract AF_UNIX socket hosted by mDNSResponder.
++// 1. Only one client at a time can connect to the listener.
++// 2. Sleep can be requested by sending the current time in milliseconds as a UInt64 in network byte order (big endian).
++// 3. mDNSResponder may need some time to transfer services to the Bonjour Sleep Proxy.
++// 4. Once mDNSResponder is ready to enter sleep, it communicates another timestamp in same format back.
++// 5. The system should dark wake (screen off) at the time requested by mDNSResponder for periodic maintenance tasks.
++// 6. When dark waking, the current time should once more be sent (as in 2.) and the process repeats.
++// 7. When the system fully wakes, the socket is closed to inform mDNSRespodner that the system is awake again.
++//
++// Rationale for having separate mechanisms for full wake / dark wake:
++// There may be a setup with multiple processes attempting to connect to the low power mode control socket.
++// In this setup, we prefer to only have a single controlling process at a time, until the system fully wakes again.
++// A logical transaction spans from full wake to the next full wake.
++// Furthermore, having information about the wake type may be benficial in the future.
++
++mDNSlocal void CloseLPMSocket(mDNS *const m)
++{
++    verbosedebugf("%s: Closing low power mode control connection.", __FUNCTION__);
++    // Close low power mode control connection.
++    if (m->p->lpmSocket >= 0)
++    {
++        // Remove socket from event loop if we were waiting for data.
++        if (m->p->numLPMBytes != sizeof(m->p->lpmBytes))
++        {
++            int rv = mDNSPosixRemoveFDFromEventLoop(m->p->lpmSocket);
++            if(rv != 0)
++            {
++                verbosedebugf("Warning, mDNSPosixRemoveFDFromEventLoop returned %d", rv);
++            }
++        }
++
++        (void) close(m->p->lpmSocket);
++        m->p->numLPMBytes = 0;
++        m->p->lpmSocket = -1;
++    }
++
++    // Report that system woke.
++    if (m->p->didRequestLPM)
++    {
++        m->p->didRequestLPM = mDNSfalse;
++        mDNSCoreMachineSleep(m, mDNSfalse);
++    }
++}
++
++// Called when data is available on the low power mode control connection.
++mDNSlocal void LPMSocketCallback(int fd, void *context)
++{
++    mDNS *const m = context;
++    assert(fd == m->p->lpmSocket);
++
++    // Read data.
++    assert(m->p->numLPMBytes < sizeof(m->p->lpmBytes));
++    void *bytes = &m->p->lpmBytes[m->p->numLPMBytes];
++    size_t maxBytes = sizeof(m->p->lpmBytes) - m->p->numLPMBytes;
++    ssize_t n;
++    do
++    {
++        n = recv(m->p->lpmSocket, bytes, maxBytes, 0);
++    }
++    while (n == -1 && errno == EINTR);
++    if (n < 0)
++    {
++        // Check if data will be delivered later.
++        if (errno == EAGAIN || errno == EWOULDBLOCK)
++            return;
++
++        perror("recv");
++        CloseLPMSocket(m);
++        return;
++    }
++    if (n == 0)
++    {
++        LogSPS("%s: Low power mode control connection terminated (system woke).", __FUNCTION__);
++        CloseLPMSocket(m);
++        return;
++    }
++    assert((size_t) n <= maxBytes);
++    m->p->numLPMBytes += (size_t) n;
++    if (m->p->numLPMBytes < sizeof(m->p->lpmBytes))
++        return;
++
++    // Full data transferred.
++    m->p->lpmRequestTime = mDNS_TimeNow(m);
++
++    // We only want to process one sleep request at a time, hence stop reading data until the current one is answered.
++    int rv = mDNSPosixRemoveFDFromEventLoop(m->p->lpmSocket);
++    assert(rv == 0);
++
++    // At any time the system wakes (dark wake or full wake) the network stack has come up again,
++    // and we are once more in control of our IP addresses. This means that even for dark wakes,
++    // we have to inform that the system resumed, and then request to sleep again.
++    // Dark wakes are treated like full wakes in that regard.
++    if (m->p->didRequestLPM)
++    {
++        verbosedebugf("Received request to extend sleep (dark wake).");
++        LogSPS("Received request to extend sleep (dark wake).");
++        m->p->didRequestLPM = mDNSfalse;
++        mDNSCoreMachineSleep(m, mDNSfalse);
++    }
++    else{
++        verbosedebugf("Received request to sleep.");
++        LogSPS("Received request to sleep.");
++    }
++
++    // Request sleep.
++    if (!m->PrimaryMAC.l[0]){
++        verbosedebugf("m->PrimaryMAC is not properly defined. BSP registration will fail.");
++        LogSPS("m->PrimaryMAC is not properly defined. BSP registration will fail.");
++    }
++    assert(!m->p->didRequestLPM);
++    m->p->didRequestLPM = mDNStrue;
++    mDNSCoreMachineSleep(m, mDNStrue);
++
++    // mDNSPosixRunEventLoopOnce will call LPMHandleProcessedEvent each time that an event has been processed.
++    // Once ready for sleep, the reply will be sent over the low power mode control connection.
++}
++
++// Called when the event loop has processed events.
++mDNSlocal void LPMHandleProcessedEvent(mDNS *const m)
++{
++    int err = 0;
++
++    // If there is no pending sleep request, no action needed.
++    if (m->p->numLPMBytes != sizeof(m->p->lpmBytes)){
++        verbosedebugf("%s: No pending sleep request.", __FUNCTION__);
++        return;
++    }
++    assert(m->p->didRequestLPM);
++
++    // Get current time.
++    mDNSs32 now = mDNS_TimeNow(m);
++
++    // If we still have pending work to do, don't confirm sleep yet.
++    if (!mDNSCoreReadyForSleep(m, now)){
++        verbosedebugf("%s: Pending sleep request, but pending work to do. Don't confirm sleep yet.", __FUNCTION__);
++        return;
++    }
++
++    // Compute target time to wake.
++    mDNSs32 wakeTime = now + mDNSCoreIntervalToNextWake(m, now, NULL);
++
++    // Compute wake time relative to low power mode controller base time.
++    if (wakeTime < m->p->lpmRequestTime)
++        wakeTime = m->p->lpmRequestTime;
++    uint64_t duration = (uint64_t) (wakeTime - m->p->lpmRequestTime);
++    uint64_t oneSecond = (uint64_t) mDNSPlatformOneSecond;
++    uint64_t durationMS = (duration * 1000 + oneSecond - 1) / oneSecond;
++    LogSPS("Confirming ok to sleep for %llu seconds (since last request).", (unsigned long long) durationMS / 1000);
++    verbosedebugf("%s: Confirming ok to sleep for %llu seconds (since last request).", __FUNCTION__, (unsigned long long) durationMS / 1000);
++
++    // Read request time.
++    uint64_t requestMS = 0;
++    for (size_t i = 0; i < sizeof(m->p->lpmBytes); i++)
++        requestMS |= m->p->lpmBytes[sizeof(m->p->lpmBytes) - 1 - i] << (i * 8);
++
++    // Compute response time.
++    uint64_t responseMS = requestMS + durationMS;
++    if (responseMS < requestMS)
++        responseMS = UINT64_MAX;
++
++    // Write response time.
++    for (size_t i = 0; i < sizeof(m->p->lpmBytes); i++)
++        m->p->lpmBytes[sizeof(m->p->lpmBytes) - 1 - i] = (responseMS >> (i * 8)) & 0xFF;
++
++    // Currently, the event loop only supports non-blocking reads on sockets, but not non-blocking writes.
++    // Temporarily configure low power mode control socket as blocking.
++    err = fcntl(m->p->lpmSocket, F_GETFL, 0);
++    if (err < 0)
++    {
++        perror("fcntl(F_GETFL)");
++        CloseLPMSocket(m);
++        return;
++    }
++    err = fcntl(m->p->lpmSocket, F_SETFL, err & ~O_NONBLOCK);
++    if (err < 0)
++    {
++        perror("fcntl(F_SETFL, ~O_NONBLOCK)");
++        CloseLPMSocket(m);
++        return;
++    }
++
++#ifndef MSG_NOSIGNAL
++#define MSG_NOSIGNAL 0
++#endif
++    // Send response.
++    ssize_t n;
++    int loopCount = 0;
++    do
++    {
++        n = send(m->p->lpmSocket, m->p->lpmBytes, sizeof(m->p->lpmBytes), MSG_NOSIGNAL);
++    }
++    while (n == -1 && errno == EINTR && loopCount++ < 10);
++    if (n < 0)
++    {
++        verbosedebugf("%s: send error, errno %d", __FUNCTION__, errno);
++        perror("send");
++        CloseLPMSocket(m);
++        return;
++    }
++    assert(n == sizeof(m->p->lpmBytes));
++    verbosedebugf("%s: finished sending response. Tried to send %d times before success.", __FUNCTION__, loopCount);
++
++    // Set the socket to non-blocking again.
++    err = fcntl(m->p->lpmSocket, F_GETFL, 0);
++    if (err < 0)
++    {
++        perror("fcntl(F_GETFL)");
++        CloseLPMSocket(m);
++        return;
++    }
++    err = fcntl(m->p->lpmSocket, F_SETFL, err | O_NONBLOCK);
++    if (err < 0)
++    {
++        perror("fcntl(F_SETFL, O_NONBLOCK)");
++        CloseLPMSocket(m);
++        return;
++    }
++
++    // Start receiving data.
++    err = mDNSPosixAddFDToEventLoop(m->p->lpmSocket, LPMSocketCallback, m);
++    if (err != 0)
++    {
++        CloseLPMSocket(m);
++        return;
++    }
++    m->p->numLPMBytes = 0;
++
++    // The system will now enter low power mode.
++    // Network facilities may no longer be available during low power mode.
++    // If the system wakes normally, the low power mode control connection will be closed.
++    // In this case, LPMSocketCallback will be called, recv will return 0 and CloseLPMSocket reports awake status.
++    // Otherwise, the system will dark wake at the time that we requested.
++    // In this case, the low power mode control connection remains open, and will receive a request to extend sleep.
++
++    // Wait for low power mode control event. If we would continue calling mDNS_Execute we would end up in a busy loop.
++    verbosedebugf("Monitoring socket for low power mode control events.");
++    fd_set readfds;
++    FD_ZERO(&readfds);
++    FD_SET(m->p->lpmSocket, &readfds);
++    int numReady;
++    do
++    {
++        numReady = select(m->p->lpmSocket + 1, &readfds, NULL, NULL, NULL);
++    }
++    while (numReady == -1 && errno == EINTR);
++    if (numReady < 0)
++    {
++        perror("select");
++        return;
++    }
++    assert(numReady == 1);
++    verbosedebugf("Detected a low power mode control event on socket.");
++}
++
++// Called when another process connects to to our low power mode control listener.
++mDNSlocal void LPMListenerCallback(int fd, void *context)
++{
++    mDNS *const m = context;
++    assert(fd == m->p->lpmListener);
++
++    int err = 0;
++
++    verbosedebugf("%s: Process has connected to the low power mdoe control listener.", __FUNCTION__);
++
++    // Accept socket.
++    int socket;
++    do
++    {
++        socket = accept(m->p->lpmListener, NULL, NULL);
++    }
++    while (socket == -1 && errno == EINTR);
++    if (socket == -1)
++    {
++        // Check if socket was available for accepting.
++        if (errno == EAGAIN || errno == EWOULDBLOCK)
++            return;
++
++        // Check if socket was already closed by client.
++        if (errno == ECONNABORTED || errno == EPROTO)
++            return;
++
++        perror("accept");
++        return;
++    }
++
++    // Only one socket supported at a time.
++    if (m->p->lpmSocket >= 0)
++    {
++        LogSPS("%s: Rejecting new low power mode control connection because we already have one.", __FUNCTION__);
++        (void) close(socket);
++        return;
++    }
++
++    verbosedebugf("%s: Accepting new low power mode control connection.", __FUNCTION__);
++
++    // Set the socket to non-blocking.
++    err = fcntl(socket, F_GETFL, 0);
++    if (err < 0)
++    {
++        perror("fcntl(F_GETFL)");
++        (void) close(socket);
++        return;
++    }
++    err = fcntl(socket, F_SETFL, err | O_NONBLOCK);
++    if (err < 0)
++    {
++        perror("fcntl(F_SETFL, O_NONBLOCK)");
++        (void) close(socket);
++        return;
++    }
++
++    // Start receiving data.
++    err = mDNSPosixAddFDToEventLoop(socket, LPMSocketCallback, m);
++    if (err != 0)
++    {
++        (void) close(socket);
++        return;
++    }
++    m->p->lpmSocket = socket;
++    m->p->numLPMBytes = 0;
++    assert(!m->p->didRequestLPM);
++    LogSPS("%s: Received low power mode control connection.", __FUNCTION__);
++}
++
++#endif // HAVE_LPM_LISTENER
++
+ // mDNS core calls this routine to initialise the platform-specific data.
+ mDNSexport mStatus mDNSPlatformInit(mDNS *const m)
+ {
+@@ -1868,6 +2210,52 @@ mDNSexport mStatus mDNSPlatformInit(mDNS *const m)
+     mDNSPosixTLSInit();
+ #endif
+ 
++#if HAVE_LPM_LISTENER
++    // Create listener socket for other processes to inform us about low power mode state changes.
++    m->p->didRequestLPM = mDNSfalse;
++    m->p->numLPMBytes = 0;
++    m->p->lpmSocket = -1;
++    m->p->lpmListener = socket(PF_UNIX, SOCK_STREAM, 0);
++    if (m->p->lpmListener < 0) { err = errno; perror("socket PF_UNIX"); fflush(stderr); }
++    if (err == 0)
++    {
++        struct sockaddr_un sun;
++        mDNSPlatformMemZero(&sun, sizeof(sun));
++        sun.sun_family = AF_UNIX;
++        assert(sizeof(sun.sun_path) > sizeof(MDNS_LPM_SERVERPATH));
++        sun.sun_path[0] = '\0';
++        mDNSPlatformMemCopy(&sun.sun_path[1], MDNS_LPM_SERVERPATH, sizeof MDNS_LPM_SERVERPATH);
++        err = bind(m->p->lpmListener, (struct sockaddr *) &sun, sizeof(sun));
++        if (err < 0) { err = errno; perror("bind"); fflush(stderr); }
++    }
++    if (err == 0)
++    {
++        err = fcntl(m->p->lpmListener, F_GETFL, 0);
++        if (err < 0) err = errno;
++        else
++        {
++            err = fcntl(m->p->lpmListener, F_SETFL, err | O_NONBLOCK);
++            if (err < 0) err = errno;
++        }
++    }
++    if (err == 0)
++    {
++        err = listen(m->p->lpmListener, 1);
++        if (err < 0) { err = errno; perror("listen"); fflush(stderr); }
++    }
++    if (err == 0)
++        err = mDNSPosixAddFDToEventLoop(m->p->lpmListener, LPMListenerCallback, m);
++    if (err != 0 && m->p->lpmListener >= 0)
++    {
++        (void) close(m->p->lpmListener);
++        m->p->lpmListener = -1;
++    }
++    assert((err == 0) == (m->p->lpmListener >= 0));
++    if (m->p->lpmListener >= 0)
++        m->SystemWakeOnLANEnabled = mDNS_WakeOnAC;
++    LogSPS("%s: Wake On LAN: %d", __FUNCTION__, m->SystemWakeOnLANEnabled);
++#endif // HAVE_LPM_LISTENER
++
+     // We don't do asynchronous initialization on the Posix platform, so by the time
+     // we get here the setup will already have succeeded or failed.  If it succeeded,
+     // we should just call mDNSCoreInitComplete() immediately.
+@@ -1883,6 +2271,19 @@ mDNSexport void mDNSPlatformClose(mDNS *const m)
+ {
+     int rv;
+     assert(m != NULL);
++
++#if HAVE_LPM_LISTENER
++    m->p->didRequestLPM = mDNSfalse;
++    CloseLPMSocket(m);
++    if (m->p->lpmListener >= 0)
++    {
++        rv = mDNSPosixRemoveFDFromEventLoop(m->p->lpmListener);
++        assert(rv == 0);
++        (void) close(m->p->lpmListener);
++        m->p->lpmListener = -1;
++    }
++#endif
++
+     ClearInterfaceList(m);
+     if (m->p->unicastSocket4 != -1)
+     {
+@@ -2502,6 +2903,10 @@ mStatus mDNSPosixRunEventLoopOnce(mDNS *m, const struct timeval *pTimeout,
+     else
+         *pDataDispatched = mDNSfalse;
+ 
++#if HAVE_LPM_LISTENER
++    LPMHandleProcessedEvent(m);
++#endif
++
+     (void) sigprocmask(SIG_BLOCK, &gEventSignalSet, (sigset_t*) NULL);
+     *pSignalsReceived = gEventSignals;
+     sigemptyset(&gEventSignals);
+diff --git a/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.h b/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.h
+index 9675591..923fa43 100644
+--- a/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.h
++++ b/mDNSResponder-1556.80.2/mDNSPosix/mDNSPosix.h
+@@ -49,12 +49,24 @@ struct PosixNetworkInterface
+ // This is a global because debugf_() needs to be able to check its value
+ extern int gMDNSPlatformPosixVerboseLevel;
+ 
++#if HAVE_LPM_LISTENER
++#define MDNS_LPM_SERVERPATH "/var/run/mDNSResponder-lpm"
++#endif
++
+ struct mDNS_PlatformSupport_struct
+ {
+     int unicastSocket4;
+ #if HAVE_IPV6
+     int unicastSocket6;
+ #endif
++#if HAVE_LPM_LISTENER
++    int lpmListener;
++    int lpmSocket;
++    mDNSu8 lpmBytes[8]; // Contains the current time in milliseconds, as received from the connected client.
++    mDNSu8 numLPMBytes;
++    mDNSs32 lpmRequestTime;
++    mDNSBool didRequestLPM;
++#endif
+ };
+ 
+ // We keep a list of client-supplied event sources in PosixEventSource records
+-- 
+2.32.0 (Apple Git-132)
+

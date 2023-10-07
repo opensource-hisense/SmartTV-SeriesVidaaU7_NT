@@ -1,0 +1,38 @@
+For Android:
+1. How to build:
+step 1: please put this folder to android/mediatek/*-series/open/frameworks;
+step 2: for Android N and older version, please use: mm -B; for Android O and newer version, please use: mm mtkut_android
+2. How to run:
+step 1: put mtkut_android to /system/bin
+adb root
+adb remount
+adb push mtkut_android /system/bin
+adb sync
+step 2: If you want to playback files on usb disk, please setprop:
+setprop mtk.ut.base.filepath file:///storage/152A-D6E9/     *:replace 152A-D6E9 as your usb disk name
+step 3: run mtkut_android
+adb shell mtkut_android
+
+For Linux:
+1. How to build:
+make: make mtkut_linux
+clean: make clean
+2. How to run:
+step 1:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/basic
+step 2:
+./mtkut_linux
+Note: If you want to playback files on usb disk, please make sure usb disk mount path is "/mnt/usb/sda1".
+
+
+Useful command for gtest:
+1. --gtest_filter
+--gtest_filter=*` Also runs everything, due to the single match-everything `*` value.
+--gtest_filter=FooTest.*` Runs everything in test case `FooTest`.
+--gtest_filter=*Null*:*Constructor*` Runs any test whose full name contains either `"Null"` or `"Constructor"`.
+--gtest_filter=-*DeathTest.*` Runs all non-death tests.
+--gtest_filter=FooTest.*-FooTest.Bar` Runs everything in test case `FooTest` except `FooTest.Bar`.
+ex: adb shell mtkut_android --gtest_filter=cmpb_ut_normal_playback.UT_MM001_001
+
+2. --gtest_output
+ex: adb shell mtkut_android --gtest_output=xml:/storage/152A-D6E9/

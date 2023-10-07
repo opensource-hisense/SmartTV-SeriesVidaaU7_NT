@@ -1,0 +1,10 @@
+NAME=c-ares
+VERSION=1.18.1
+URL=http://c-ares.haxx.se/
+LICENSE=MIT
+OWNER=ot_xumiao.xu
+SOURCE=oss/source/c-ares
+MTK_MODIFY=
+USAGE=Dynamic Link
+INSTALL_PATH=lib
+COMMENT=c-ares is a C library that performs DNS requests and name resolves asynchronously.

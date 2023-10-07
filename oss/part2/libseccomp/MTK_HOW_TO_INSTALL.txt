@@ -1,0 +1,16 @@
+#################################################
+Normally Install
+#################################################
+make
+make install
+
+#################################################
+If something is Wrong
+#################################################
+cd libseccomp-2.4.2
+./autogen.sh
+### 5.5.0 => TOOL_CHAIN_HOST:=arm-linux-gnueabi
+### 10.2.1 => TOOL_CHAIN_HOST:=arm-none-linux-gnueabihf
+./configure --host=$(TOOL_CHAIN_HOST) --prefix=$(OSS_LIB_ROOT)/libseccomp/libseccomp-2.4.2 CC=$(CROSS_COMPILE)gcc CFLAGS="-Wformat=2 -Wformat-security -O2 -fstack-protector-strong -s -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now"
+make
+make install

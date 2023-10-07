@@ -1,0 +1,16 @@
+LOCAL_PATH := $(call my-dir)
+LINUX_3RD_PATH ?= /mnt/vendor/3rd
+
+include $(MTK_CLEAR_VARS)
+LOCAL_MODULE := libxml2
+LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+LOCAL_SRC_FILES := lib/libxml2.so.2.10.3
+LOCAL_MODULE_PATH := $(TARGET_3RD_OUT)/lib
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include/libxml2/libxml
+LOCAL_CREATE_SYMLINK += libxml2.so.2.10.3:libxml2.so \
+                        libxml2.so.2.10.3:libxml2.so.2 \
+                        $(LINUX_3RD_PATH)/lib/libxml2.so.2.10.3:$(TARGET_BASIC_OUT)/lib/libxml2.so \
+                        $(LINUX_3RD_PATH)/lib/libxml2.so.2.10.3:$(TARGET_BASIC_OUT)/lib/libxml2.so.2 \
+                        $(LINUX_3RD_PATH)/lib/libxml2.so.2.10.3:$(TARGET_BASIC_OUT)/lib/libxml2.so.2.10.3
+
+include $(MTK_BUILD_PREBUILT_BY_SYMLINK)

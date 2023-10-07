@@ -1,0 +1,11 @@
+NAME=uriparser
+VERSION=0.9.6
+URL=http://uriparser.sourceforge.net/
+LICENSE=New BSD license
+OWNER=theo.hu
+SOURCE=vendor/mediatek/tv/oss/source/uriparser/v0.9.6
+MTK_MODIFY=YES
+USAGE=Dynamic Link
+INSTALL_PATH=3rd
+COMMENT=c runtime library
+RELEASE_SOURCE=Yes

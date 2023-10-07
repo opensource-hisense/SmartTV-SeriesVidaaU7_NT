@@ -1,0 +1,16 @@
+NAME=Expat
+VERSION=v2.5.0
+URL=libexpat.github.io
+LICENSE=MIT/X Consortium license
+OWNER=Leil Sun
+SOURCE=oss/source/expat
+MTK_MODIFY=
+USAGE=Dynamic Link
+INSTALL_PATH=basic
+COMMENT=This is Expat, a C library for parsing XML, started by
+[James Clark](https://en.wikipedia.org/wiki/James_Clark_%28programmer%29) in 1997.
+Expat is a stream-oriented XML parser.  This means that you register
+handlers with the parser before starting the parse.  These handlers
+are called when the parser discovers the associated structures in the
+document being parsed.  A start tag is an example of the kind of
+structures for which you may register handlers.

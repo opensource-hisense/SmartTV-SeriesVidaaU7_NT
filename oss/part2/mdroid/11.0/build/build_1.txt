@@ -1,0 +1,54 @@
+make -C src/libc_common PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libc_common'
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libc_common
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libc_common'
+make -C src/cutils PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/cutils'
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libcutils
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/cutils'
+make -C src/utils PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/utils'
+Archiving StaticLib: (../../../lib/linux-arm/libutils.a)
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libutils
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/utils'
+make -C src/log PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/log'
+Archiving StaticLib: (../../../lib/linux-arm/liblog.a)
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: liblog
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/log'
+make -C src/binder PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/binder'
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libbinder
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/binder'
+make -C src/libselinux PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libselinux'
+Archiving StaticLib: (../../../lib/linux-arm/libselinux.a)
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libselinux
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libselinux'
+make -C src/libsepol PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libsepol'
+Archiving StaticLib: (../../../lib/linux-arm/libsepol.a)
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libsepol
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/libsepol'
+make -C src/pcre PLATFORM=linux-arm PROJECT= all
+make[1]: Entering directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/pcre'
+Archiving StaticLib: (../../../lib/linux-arm/libpcre.a)
+*********************************************************************
+* Platform: linux-arm, Project:   MODULE: libpcre
+*********************************************************************
+make[1]: Leaving directory `/mfs/mcpslt0007/mtk18676/Mdroid/porting10/10.0/build/src/pcre'
+>> Linkng SharedLib: (../lib/linux-arm/libmdroid.so)

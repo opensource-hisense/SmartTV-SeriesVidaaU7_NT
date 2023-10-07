@@ -1,0 +1,36 @@
+#
+# CMake Toolchain file for crosscompiling on ARM.
+#
+# This can be used when running cmake in the following way:
+#  cd build/
+#  cmake .. -DCMAKE_TOOLCHAIN_FILE=../cross-arm-linux-gnueabihf.cmake
+#
+#4.8.2 tool-chain
+#set(CROSS_PATH /mtkoss/gnuarm/neon_4.8.2_2.6.35_cortex-a9-ubuntu/x86_64/)
+
+#5.5.0 tool-chian
+set(CROSS_PATH /mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/)
+
+# Target operating system name.
+set(CMAKE_SYSTEM_NAME Linux)
+
+# Name of C compiler.
+#4.8.2 tool-chain
+#set(CMAKE_C_COMPILER "${CROSS_PATH}/bin/armv7a-mediatek482_001_neon-linux-gnueabi-gcc")
+#set(CMAKE_CXX_COMPILER "${CROSS_PATH}/bin/armv7a-mediatek482_001_neon-linux-gnueabi-g++")
+
+#5.5.0 tool-chian
+set(CMAKE_C_COMPILER "${CROSS_PATH}/bin/arm-linux-gnueabi-gcc")
+set(CMAKE_CXX_COMPILER "${CROSS_PATH}/bin/ arm-linux-gnueabi-g++")
+
+# Where to look for the target environment. (More paths can be added here)
+set(CMAKE_FIND_ROOT_PATH "${CROSS_PATH}")
+
+# Adjust the default behavior of the FIND_XXX() commands:
+# search programs in the host environment only.
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+
+# Search headers and libraries in the target environment only.
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+

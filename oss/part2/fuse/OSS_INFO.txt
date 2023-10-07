@@ -1,0 +1,10 @@
+NAME=fuse
+VERSION=2.9.9
+URL=https://github.com/libfuse/libfuse/releases
+LICENSE=GPLv2/LGPLv2
+OWNER=xiuqin.wang
+SOURCE=oss/source/fuse
+MTK_MODIFY=
+USAGE=ko & so
+COMMENT=Fuse is a simple interface for userspace programs to export a virtual filesystem to the linux kernel
+INSTALL_PATH=basic

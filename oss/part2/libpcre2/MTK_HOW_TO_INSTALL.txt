@@ -1,0 +1,19 @@
+#################################################
+Normally Install
+#################################################
+make all
+make install
+
+#################################################
+If something is Wrong
+#################################################
+cd dist2
+chmod +x configure
+autoreconf -f -i
+### 5.5.0 => TOOL_CHAIN_HOST:=arm-linux-gnueabi
+### 10.2.1 => TOOL_CHAIN_HOST:=arm-none-linux-gnueabihf
+./configure --prefix=/ --host=$(TOOL_CHAIN_HOST)
+make
+make install
+copy result/include/pcre2.h, result/include/lib/libpcre2-8.so* to libselinux/src and libselinux/include/lib
+copy one libpcre2-8.so.0.4.0 to libpcre.so

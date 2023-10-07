@@ -1,0 +1,93 @@
+//THEALE/RedLion/Lunar/directfb/1.4.2 (named as DFB) Code Line Policy
+
+////////////////////////////////////////////
+// Description
+////////////////////////////////////////////
+DFB mainline
+
+////////////////////////////////////////////
+// What test mechanism before submit code
+////////////////////////////////////////////
+1. DZ pass (Build code successfully)
+
+////////////////////////////////////////////
+// Integration test duration
+////////////////////////////////////////////
+1.Follow SN integration test.
+SQC team does test every 2 day. Test cases are provided by PL. PL need to handle the bugs after testing and make sure them be fixed in a reasonable days.
+
+2.Module test
+Normal one month, by SQC detail test.
+
+////////////////////////////////////////////
+// What test mechanism before release
+////////////////////////////////////////////
+Test cases of SQC team is provided by Kunic.
+Test items: Performance(df_dok, df_andi), IR & display(SN UI, Youtube), MM Browser, TVOS ...
+
+////////////////////////////////////////////
+// Activity on this code line
+////////////////////////////////////////////
+For bug fixing and new feature implementation is allowed. 
+
+////////////////////////////////////////////
+// Check-in flow: (Please define it)
+////////////////////////////////////////////
+1.	Info Kunic why to modify.
+2.	Get Latest source code and merge your change.
+3.	Do a private build (build your source on your PC or build server without error)
+4.	Run DZ
+5.	Get ticket from YMY after passing Reviewers-review.
+6.	Check-in code
+
+////////////////////////////////////////////
+// CodeLines release to
+////////////////////////////////////////////
+1. Supernova maintrunk. 
+
+////////////////////////////////////////////
+// How to get binary or source code
+////////////////////////////////////////////
+1.  Binary ://DAILEO/Supernova/develop/extra/target/mips-hardfloat/directfb-1.4.2m.tar.gz
+            //DAILEO/Supernova/develop/extra/target/mips-softfloat/directfb-1.4.2m.tar.gz
+            //DAILEO/Supernova/develop/extra/target/arm-hardfloat/directfb-1.4.2m.tar.gz
+						//DAILEO/Supernova/develop/extra/target/arm-softfloat/directfb-1.4.2m.tar.gz
+
+2.  Source code : //THEALE/RedLion/Lunar/directfb/1.4.2 
+		You can reference the Road Map to get the latest Version CL#. 
+		
+3.  AutoBuild Path : \\swhcsvr24\AUTOBUILD\DFB\BIN 
+
+
+
+////////////////////////////////////////////
+// Road Map
+////////////////////////////////////////////
+[2014.12.11] Release Version DFB-1.4.2.00001211
+[2014.11.11] Release Version DFB-1.4.2.01025746
+[2014.10.15] Release Version DFB-1.4.2.00998010
+[2014.09.10] Release Version DFB-1.4.2.00971039
+[2014.04.24] Release Version DFB-1.4.2.00832233
+[2014.02.26] Release Version DFB-1.4.2.00777580
+[2013.12.27] Release Version DFB-1.4.2.00728209
+[2013.12.09] Release Version DFB-1.4.2.00711928
+[2013.11.25] Release Version DFB-1.4.2.00700011
+[2013.11.14] Release Version DFB-1.4.2.00692661
+[2013.11.28] Release Version DFB-1.4.2.00001128
+[2013.10.28] Release Version DFB-1.4.2.00674612
+[2013.10.16] Release Version DFB-1.4.2.00665688
+[2013.09.26] Release Version DFB-1.4.2.00652191
+[2013.08.23] Release Version DFB-1.4.2.00624721
+[2013.08.07] Release Version DFB-1.4.2.00610906
+[2013.07.03] Release Version DFB-1.4.2.00580631
+[2013.06.06] Release Version DFB-1.4.2.00558430
+[2013.04.19] Release Version DFB-1.4.2.00517323
+[2013.03.13] Release Version DFB-1.4.2.00482706
+[2013.01.10] Release Version DFB-1.4.2.00438171
+[2012.12.04] Release Version DFB-1.4.2.00420684
+[2012.09.14] Release Version DFB-1.4.2.00659195
+[2012.07.26] Release Version DFB-1.4.2.00625195
+[2012.07.05] Add version_info into binary library
+[2012.05.31] Release Version DFB-1.4.2.00593731
+[2012.04.27] Release Version DFB-1.4.2.00572832
+[Monthly] Release DFB to SN.

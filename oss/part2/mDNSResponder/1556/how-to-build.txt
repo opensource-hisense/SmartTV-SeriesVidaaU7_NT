@@ -1,0 +1,22 @@
+1. Untar
+  $ unzip mDNSResponder-1556.80.2.zip
+
+2. Copy Makefile.mtk to mDNSPosix
+  $ cp Makefile.mtk mDNSResponder-1556.80.2/mDNSPosix/Makefile
+
+3. Patch due to Seccomp block syscall
+  $ patch -p1 < Add-WOLAN-functionality.patch
+  $ patch -p0 < PlatformCommon.patch
+  $ patch -p0 < PosixDaemon.patch
+  $ patch -p0 < mDNS.patch
+
+4. Add HAVE_LPM_LISTENER=1 to Makefile if need to enable LPM
+
+5. Build
+  $ cd mDNSResponder-1556.80.2/mDNSPosix/
+  $ make os=linux
+
+6. Install
+  $ cp build/prod/mdnsd ../../../../../library/gnuarm-10.2.1_neon_ca9/mDNSResponder/1556/bin/
+  $ cp build/prod/libdns_sd.so ../../../../../library/gnuarm-10.2.1_neon_ca9/mDNSResponder/1556/lib
+  $ cp ../mDNSShared/*.h ../../../../../library/gnuarm-10.2.1_neon_ca9/mDNSResponder/1556/include/

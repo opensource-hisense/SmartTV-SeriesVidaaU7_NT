@@ -1,0 +1,10 @@
+NAME= mdroid
+VERSION=2.3 - 8.0
+URL=https://android.googlesource.com/
+LICENSE= APACHE2
+OWNER= Gordon.hsu
+SOURCE= Android Source code
+MTK_MODIFY= Yes
+USAGE= Dynamic Link
+INSTALL_PATH= mslib
+COMMENT= mdroird - Android binder using for inter process communication

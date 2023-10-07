@@ -1,0 +1,10 @@
+NAME=libjpeg
+VERSION=9d
+URL=http://www.ijg.org/
+LICENSE=libjpeg.txt
+OWNER=ted.jian
+SOURCE=oss/source/jpeg
+MTK_MODIFY=No
+USAGE=Dynamic Link
+INSTALL_PATH=lib
+COMMENT=The 'libjpeg' library used for jpeg image decode.

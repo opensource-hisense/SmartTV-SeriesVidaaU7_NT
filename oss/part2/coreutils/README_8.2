@@ -1,0 +1,13 @@
+coreutils that support SELinux
+Compile libpcre2 then libselinux first
+Compile method:
+
+cd coreutils-8.2/
+
+chmod +x configure
+
+./configure LDFLAGS="-L$PWD/../../libpcre2/libpcre2.10.22/dist2/result/lib -L$PWD/../../selinux/libselinux/src -L$PWD/../../selinux/libselinux/include/lib -lselinux -lpcre" CPPFLAGS=-I$PWD/../../selinux/libselinux/include  CFLAGS=-I$PWD/../../selinux/libselinux/include --host=armv7a-mediatek451_001_vfp-linux-gnueabi --enable-install-program=df
+
+make all
+
+copy src/ls, src/chcon, src/runcon to oss/library/gnuarm-xx.xx/selinux/selinux-x.x/bin/

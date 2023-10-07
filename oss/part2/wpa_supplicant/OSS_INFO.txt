@@ -1,0 +1,11 @@
+NAME=wpa_supplicant
+VERSION=v2.10(cfg80211)
+URL=https://w1.fi/wpa_supplicant/
+LICENSE=BSD license
+OWNER=lily.ma
+SOURCE=oss/source/wpa_supplicant
+MTK_MODIFY=Yes
+USAGE=Dynamic Link
+COMMENT=c runtime library
+RELEASE_SOURCE=Yes
+INSTALL_PATH=3rd

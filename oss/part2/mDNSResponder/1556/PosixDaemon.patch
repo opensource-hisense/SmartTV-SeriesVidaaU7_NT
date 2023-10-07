@@ -1,0 +1,28 @@
+--- mDNSResponder-1556.80.2/mDNSPosix/ori_PosixDaemon.c	2021-06-10 08:02:22.000000000 +0800
++++ mDNSResponder-1556.80.2/mDNSPosix/PosixDaemon.c	2021-07-07 21:21:18.990272943 +0800
+@@ -108,7 +107,8 @@
+         if (0 == strcmp(argv[1], "-debug")) mDNS_DebugMode = mDNStrue;
+         else printf("Usage: %s [-debug]\n", argv[0]);
+     }
+-    if (!mDNS_DebugMode)
++    //if (!mDNS_DebugMode)
++    if (0)
+     {
+         int result = daemon(0, 0);
+         if (result != 0) { LogMsg("Could not run as daemon - exiting"); exit(result); }
+@@ -201,6 +201,7 @@
+         const struct passwd *pw = getpwnam("nobody");
+         if (pw != NULL)
+         {
++#if 0 // w.o. call setuid/setgid due to Seccomp block setuid/setgid syscall
+             if (setgid(pw->pw_gid) < 0)
+             {
+                 LogRedact(MDNS_LOG_CATEGORY_DEFAULT, MDNS_LOG_ERROR,
+@@ -210,6 +211,7 @@
+             {
+                 LogMsg("WARNING: mdnsd continuing as root because setuid to \"nobody\" failed with %s", strerror(errno));
+             }
++#endif
+         }
+         else
+         {

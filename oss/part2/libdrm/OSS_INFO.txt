@@ -1,0 +1,10 @@
+NAME=libdrm
+VERSION=2.4.100
+URL=http://dri.sourceforge.net
+LICENSE=MIT
+OWNER=fannie.tsai
+SOURCE=oss/source/libdrm
+MTK_MODIFY=
+USAGE=Dynamic Link
+INSTALL_PATH=lib
+COMMENT=userspace library for drm

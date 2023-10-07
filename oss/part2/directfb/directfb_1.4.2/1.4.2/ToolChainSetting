@@ -1,0 +1,584 @@
+#!/bin/bash
+# Chanelist:  $Change: 1478917 $
+THIS_ROOT=$(pwd -P)
+LINUX_ROOT=$(echo $THIS_ROOT | awk -F /apollo/ '{print $1"/apollo"}')
+export ANDROID_TOOLCHAIN_TOP="${TOOLCHAIN_ROOT}"
+export LINUX_TOOLCHAIN_TOP="${LINUX_ROOT}/tools/mtk_toolchain"
+export ANDROID_MTK_TOOLCHAIN_STS=$(if [ -d "${ANDROID_TOOLCHAIN_TOP}" ]; then echo "true"; else echo "false"; fi )
+export LINUX_MTK_TOOLCHAIN_STS=$(if [ -d "${LINUX_TOOLCHAIN_TOP}" ]; then echo "true"; else echo "false"; fi )
+
+#NCT5 USED
+export TOOLCHAIN_ROOT="$2"
+export MTK_TOOLCHAIN_STS=$(if [ -d "${TOOLCHAIN_ROOT}" ]; then echo "true"; else echo "false"; fi )
+
+SupportList()
+{
+
+echo
+echo -e "\e[01;33m Example: \e[00m"
+echo -e "   \$ source /tools/ToolChainSetting SourceryArm_472 "
+echo -e "    "
+echo -e "\e[01;36m Current Support \e[00m"
+echo -e "\e[01;30m [Arm] \e[00m"
+echo "    SourceryArm_451    : Sourcery CodeBench Lite 2010.09-50 "
+echo "    SourceryArm_472    : Sourcery CodeBench Lite 2012.09-64 "
+echo "    SourceryArm_483    : Sourcery CodeBench Lite 2014.05-29 "
+echo "    Google_cast_491  : Google customized 4.9.1 "
+echo "    Google_cast_492  : Google customized 4.9.2 "
+echo "    Google_cast_492_r116  : Google customized 4.9.2_r116 "
+echo "    Google_cast_492_r145  : Google customized 4.9.2_r145 "
+echo "    Google_cast_clang_3_9_r19  : Google customized clang 3.9_r19 "
+echo "    Google_cast_clang_5_0_r12  : Google customized clang 5.0_r12 "
+echo "    Linaro_Arm_493   : Linaro 4.9.3 2014.11 hardfloat    "
+echo "    Linaro_Arm_fusion_482   : Linaro 4.8.2 2018.07    "
+echo "    Linaro_Arm_fusion_550   : Linaro 5.5.0 2019.04    "
+echo "    5.5.0                   : Linaro 5.5.0 2019.04    "
+echo "    10.2.1                  : Linaro 10.2.1 2021.11   "
+echo "    Linaro_Arm_fusion_c4tv  : Linaro clang 2019.06    "
+echo "    Linaro_Arm_721   : Linaro 7.2.1 2017.11 hardfloat    "
+echo -e "\e[01;30m [Aarch64] \e[00m"
+echo -e "\e[01;31m LinaroAarch64_201409   : Linaro Aarch64 4.9.2 =>  will be removed !!!! Please change to LinaroAarch64_201409_p !!!\e[00m"
+echo "    LinaroAarch64_201409_p : Linaro Aarch64 4.9.2 (mstar patched r20170413)"
+echo "    LinaroAarch64_721 : Linaro Aarch64 7.2.1"
+echo -e "\e[01;30m [MIPS] \e[00m"
+echo "    SourceryMIPS_432    : Sourcery G++ Lite 4.3-51  "
+echo "    SourceryMIPS_472    : Sourcery CodeBench Lite 2012.09-99  "
+echo "    SourceryMIPS_483    : Sourcery CodeBench Lite 2014.05-27  "
+echo "    "
+
+}
+
+# Reset function:
+Reset()
+{
+if [ "$SourceryArm_451" = "1" ];then
+   #echo SourceryArm_451
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/arm-2010.09\/bin\/\://g'`
+
+elif [ "$SourceryArm_472" = "1" ];then
+   #echo SourceryArm_472
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/arm-2012.09\/bin\/\://g'`
+
+elif [ "$SourceryArm_483" = "1" ];then
+   #echo SourceryArm_483
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/arm-2014.05\/bin\/\://g'`
+
+elif [ "$Linaro_Arm_493" = "1" ];then
+   #echo Linaro_Arm_493
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/MStar\/linaro-4.9.3-2014.11-arm-linux-gnueabihf\/bin\/\://g'`
+
+elif [ "$Linaro_Arm_fusion_482" = "1" ];then
+   #echo Linaro_Arm_fusion_482
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/MStar\/neon_4.8.2_2.6.35_cortex-a9-ubuntu\/x86_64\/\/bin\/\://g'`
+
+elif [ "$Linaro_Arm_fusion_550" = "1" ];then
+   #echo $Linaro_Arm_fusion_550
+   export PATH=`echo $PATH | sed -e 's/\/tools\/mtk_toolchain\/gcc-arm-linux-gnu-5.5.0-ubuntu\/x86_64\/bin\/\://g'`
+
+elif [ "$Linaro_Arm_fusion_c4tv" = "1" ];then
+   #echo Linaro_Arm_fusion_c4tv
+   export PATH=`echo $PATH | sed -e "s#$THIS_ROOT\/..\/..\/..\/..\/..\/third_party\/source\/CAST_TV\/prebuilt\/toolchain\/armv7a\/bin\/\:##g"`
+
+elif [ "$Linaro_Arm_721" = "1" ];then
+   #echo Linaro_Arm_721
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Linaro\/7.2.1\/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabihf\/bin\/\://g'`
+
+elif [ "$Google_cast_491" = "1" ];then
+   #echo Google_cast_491
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/armv7a-491\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-491\/bin\/\:##g"`
+
+elif [ "$Google_cast_492" = "1" ];then
+   #echo Google_cast_492
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/armv7a-492\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-492\/bin\/\:##g"`
+
+elif [ "$Google_cast_492_r116" = "1" ];then
+   #echo Google_cast_492
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/armv7a-492_r116\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-492_r116\/bin\/\:##g"`
+
+elif [ "$Google_cast_492_r145" = "1" ];then
+   #echo Google_cast_492
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/armv7a-492_r145\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-492_r145\/bin\/\:##g"`
+
+elif [ "$Google_cast_clang_3_9_r19" = "1" ];then
+   #echo Google_cast_492
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/clang\/armv7a\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-clang\/bin\/\:##g"`
+
+elif [ "$Google_cast_clang_5_0_r12" = "1" ];then
+   #echo Google_cast_492
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Google\/clang_r127\/armv7a\/bin\/\://g'`
+   export PATH=`echo $PATH | sed -e "s#$AUTO_BUILD_ROOT\/THEALE\/toolchain\/Google_armv7a-clang\/bin\/\:##g"`
+
+elif [ "$LinaroAarch64_201409" = "1" ];then
+   #echo LinaroAarch64_201409
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Linaro\/gcc-linaro-aarch64-linux-gnu-4.9-2014.09_linux\/bin\/\://g'`
+
+elif [ "$LinaroAarch64_201409_p" = "1" ];then
+   #echo LinaroAarch64_201409_p
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/MStar\/linaro_aarch64_linux-2014.09_r20170413\/bin\/\://g'`
+
+elif [ "$LinaroAarch64_721" = "1" ];then
+   #echo LinaroAarch64_721
+   export PATH=`echo $PATH | sed -e 's/\/tools\/arm\/Linaro\/7.2.1\/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu\/bin\/\://g'`
+
+elif [ "$SourceryMIPS_432" = "1" ];then
+   #echo SourceryMIPS_432
+   export PATH=`echo $PATH | sed -e 's/\/tools\/mips-4.3-51\/mips-4.3\/bin\/\://g'`
+
+elif [ "$SourceryMIPS_472" = "1" ];then
+   #echo SourceryMIPS_472
+   export PATH=`echo $PATH | sed -e 's/\/tools\/mips\/mips-2012.09\/bin\/\://g'`
+
+elif [ "$SourceryMIPS_483" = "1" ];then
+   #echo SourceryMIPS_483
+   export PATH=`echo $PATH | sed -e 's/\/tools\/mips\/mips-2014.05\/bin\/\://g'`
+
+fi
+
+unset CROSS_COMPILE
+unset CROSS_COMPILE_COMPILER
+unset USE_CLANG
+unset CLANG
+unset MSTAR_CFLAG
+unset MSTAR_CFLAG_OPT
+unset MSTAR_CPPFLAG
+unset MSTAR_LDFLAG
+unset MSTAR_LDFLAG_OPT
+unset MSTAR_LIB
+unset CC
+unset CXX
+unset LD
+unset CFLAGS
+unset CPPFLAGS
+unset CFLAGS_SETTING
+unset CPPFLAGS_SETTING
+unset LD_LIB_PATH
+
+unset SourceryArm_451
+unset SourceryArm_472
+unset SourceryArm_483
+unset Linaro_Arm_493
+unset Linaro_Arm_fusion_482
+unset Linaro_Arm_fusion_550
+unset Linaro_Arm_fusion_1021
+unset Linaro_Arm_fusion_c4tv
+unset Linaro_Arm_721
+unset Google_cast_491
+unset Google_cast_492
+unset Google_cast_492_r116
+unset Google_cast_492_r145
+unset Google_cast_clang_3_9_r19
+unset Google_cast_clang_5_0_r12
+unset LinaroAarch64_201409
+unset LinaroAarch64_201409_p
+unset LinaroAarch64_721
+unset SourceryMIPS_432
+unset SourceryMIPS_472
+unset SourceryMIPS_483
+}
+
+SET_INPUT=
+Do_Set()
+{
+
+  case "$SET_INPUT" in
+    SourceryArm_451)
+       export SourceryArm_451=1
+       ;;
+    SourceryArm_472)
+       export SourceryArm_472=1
+       ;;
+    SourceryArm_483)
+       export SourceryArm_483=1
+       ;;
+    Linaro_Arm_493)
+       export Linaro_Arm_493=1
+       ;;
+    Linaro_Arm_fusion_482)
+       export Linaro_Arm_fusion_482=1
+       ;;
+    Linaro_Arm_fusion_550)
+       export Linaro_Arm_fusion_550=1
+       ;;
+    "5.5.0")
+       export Linaro_Arm_fusion_550=1
+       ;;
+    "10.2.1")
+       export Linaro_Arm_fusion_1021=1
+       ;;
+    Linaro_Arm_fusion_c4tv)
+      export Linaro_Arm_fusion_c4tv=1
+      ;;
+    Linaro_Arm_721)
+       export Linaro_Arm_721=1
+       ;;
+    Google_cast_491)
+       export Google_cast_491=1
+       ;;
+    Google_cast_492)
+       export Google_cast_492=1
+       ;;
+    Google_cast_492_r116)
+       export Google_cast_492_r116=1
+       ;;
+    Google_cast_492_r145)
+       export Google_cast_492_r145=1
+       ;;
+    Google_cast_clang_3_9_r19)
+       export Google_cast_clang_3_9_r19=1
+       ;;
+    Google_cast_clang_5_0_r12)
+       export Google_cast_clang_5_0_r12=1
+       ;;
+    LinaroAarch64_201409)
+       export LinaroAarch64_201409=1
+       ;;
+    LinaroAarch64_201409_p)
+       export LinaroAarch64_201409_p=1
+       ;;
+    LinaroAarch64_721)
+       export LinaroAarch64_721=1
+       ;;
+    SourceryMIPS_432)
+       export SourceryMIPS_432=1
+       ;;
+    SourceryMIPS_472)
+       export SourceryMIPS_472=1
+       ;;
+    SourceryMIPS_483)
+       export SourceryMIPS_483=1
+       ;;
+    *)
+       echo -e "\033[41;1m Toolchain $SET_INPUT not support\033[0m"
+  esac
+
+if [ "$SourceryArm_451" = "1" ];then
+
+    export CROSS_COMPILE="arm-none-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="arm-none-linux-gnueabi-gcc"
+    export MSTAR_CFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CPPFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O3 -funroll-loops"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/arm-2010.09/bin/:$PATH
+
+elif [ "$SourceryArm_472" = "1" ];then
+
+    export CROSS_COMPILE="arm-none-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="arm-none-linux-gnueabi-gcc"
+    export MSTAR_CFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -fno-peephole2 -fno-promote-loop-indices -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CPPFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -fno-peephole2 -fno-promote-loop-indices -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O3 -fno-peephole2 -fno-promote-loop-indices -funroll-loops"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/arm-2012.09/bin/:$PATH
+
+elif [ "$SourceryArm_483" = "1" ];then
+
+    export CROSS_COMPILE="arm-none-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="arm-none-linux-gnueabi-gcc"
+    export MSTAR_CFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -Werror=undef"
+    export MSTAR_CPPFLAG="-mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -O2 -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mfloat-abi=softfp -mlittle-endian -march=armv7-a -O3 -funroll-loops"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/arm-2014.05/bin/:$PATH
+    
+elif [ "$Linaro_Arm_493" = "1" ];then
+
+    export CROSS_COMPILE="arm-linux-gnueabihf-"
+    export CROSS_COMPILE_COMPILER="arm-linux-gnueabihf-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$ANDROID_MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$ANDROID_TOOLCHAIN_TOP/linaro-4.9.3-2014.11-arm-linux-gnueabihf/bin:$PATH
+    elif [ "$LINUX_MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$LINUX_TOOLCHAIN_TOP/linaro-4.9.3-2014.11-arm-linux-gnueabihf/bin:$PATH
+    else
+        export PATH=/mtkeda/dtv/tools/mstar_toolchain/linaro-4.9.3-2014.11-arm-linux-gnueabihf/bin/:$PATH
+    fi
+
+elif [ "$Linaro_Arm_fusion_482" = "1" ];then
+
+    export CROSS_COMPILE="armv7a-mediatek482_001_neon-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-mediatek482_001_neon-linux-gnueabi-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$ANDROID_MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$ANDROID_TOOLCHAIN_TOP/neon_4.8.2_2.6.35_cortex-a9-ubuntu/x86_64/bin:$PATH
+    elif [ "$LINUX_MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$LINUX_TOOLCHAIN_TOP/neon_4.8.2_2.6.35_cortex-a9-ubuntu/x86_64/bin:$PATH
+    else
+        export PATH=/mtkoss/gnuarm/neon_4.8.2_2.6.35_cortex-a9-ubuntu/x86_64/bin/:$PATH
+    fi
+
+elif [ "$Linaro_Arm_fusion_550" = "1" ];then
+
+    export CROSS_COMPILE="arm-linux-gnueabi"
+    export CROSS_COMPILE_COMPILER="${CROSS_COMPILE}-gcc"
+    export CROSS_COMPILE_LD="${CROSS_COMPILE}-ld"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=softfp -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$TOOLCHAIN_ROOT/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin:$PATH
+    else
+        export PATH=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/:$PATH
+    fi
+
+elif [ "$Linaro_Arm_fusion_1021" = "1" ];then
+
+    export CROSS_COMPILE="arm-none-linux-gnueabihf"
+    export CROSS_COMPILE_COMPILER="${CROSS_COMPILE}-gcc"
+    export CROSS_COMPILE_LD="${CROSS_COMPILE}-ld"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mfpu=neon-vfpv4 -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mfpu=neon-vfpv4 -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mfpu=neon-vfpv4 -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$MTK_TOOLCHAIN_STS" == "true" ];then
+        export PATH=$TOOLCHAIN_ROOT/gcc-arm-none-linux-gnueabihf-10.2.1/bin:$PATH
+    else
+        export PATH=/mtkoss/gnuarm/gcc-arm-none-linux-gnueabihf-10.2.1/bin/:$PATH
+    fi
+
+elif [ "$Linaro_Arm_fusion_c4tv" = "1" ];then
+    #export USE_CLANG=1
+    #export USE_INTEGRATED_LIBCXX=1
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-clang"
+    #export CLANG="$(pwd)/../../../../../third_party/source/CAST_TV/prebuilt/toolchain/armv7a/usr/bin/clang"
+    export MSTAR_CFLAG="-O2 -mfloat-abi=softfp -mlittle-endian -march=armv7-a -Werror=undef -mthumb"
+    export MSTAR_CPPFLAG="-O2 -mfloat-abi=softfp -mlittle-endian -march=armv7-a -Werror=undef -mthumb"
+    export MSTAR_CFLAG_OPT="-O3 -mfloat-abi=softfp -mlittle-endian -march=armv7-a -mthumb"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=$(pwd)/../../../../../third_party/source/CAST_TV/prebuilt/toolchain/armv7a/bin/:$PATH
+
+elif [ "$Linaro_Arm_721" = "1" ];then
+
+    export CROSS_COMPILE="arm-linux-gnueabihf-"
+    export CROSS_COMPILE_COMPILER="arm-linux-gnueabihf-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/Linaro/7.2.1/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabihf/bin/:$PATH
+
+elif [ "$Google_cast_491" = "1" ];then
+
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-491/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/armv7a-491/bin/:$PATH
+    fi
+
+elif [ "$Google_cast_492" = "1" ];then
+
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-492/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/armv7a-492/bin/:$PATH
+    fi
+
+elif [ "$Google_cast_492_r116" = "1" ];then
+
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-492_r116/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/armv7a-492_r116/bin/:$PATH
+    fi
+
+elif [ "$Google_cast_492_r145" = "1" ];then
+
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-gcc"
+    export MSTAR_CFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -mfloat-abi=hard -mlittle-endian -mthumb -march=armv7-a"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-492_r145/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/armv7a-492_r145/bin/:$PATH
+    fi
+elif [ "$Google_cast_clang_3_9_r19" = "1" ];then
+    export USE_CLANG=1
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-clang"
+    export CLANG="/tools/arm/Google/clang/armv7a/usr/bin/clang"
+    export MSTAR_CFLAG="--stdlib=libc++ -I/tools/arm/Google/clang/armv7a_libc++/usr/include/c++/v1 -I/tools/arm/Google/clang/armv7a_libc++/usr/include/libcxxrt"
+    export MSTAR_CPPFLAG="--stdlib=libc++ -I/tools/arm/Google/clang/armv7a_libc++/usr/include/c++/v1 -I/tools/arm/Google/clang/armv7a_libc++/usr/include/libcxxrt"
+    export MSTAR_CFLAG_OPT="--stdlib=libc++ -I/tools/arm/Google/clang/armv7a_libc++/usr/include/c++/v1 -I/tools/arm/Google/clang/armv7a_libc++/usr/include/libcxxrt"
+    export MSTAR_LDFLAG="--stdlib=libc++ -L/tools/arm/Google/clang/armv7a_libc++/usr/lib -lcxxrt -Wl,--fatal-warnings -fPIC -Wl,-z,noexecstack -Wl,-z,now -Wl,-z,relro -Wl,-z,defs -pthread -Wl,-O1 -Wl,--gc-sections -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-492_r145/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/clang/armv7a/bin/:$PATH
+    fi
+elif [ "$Google_cast_clang_5_0_r12" = "1" ];then
+    export USE_CLANG=1
+    export USE_INTEGRATED_LIBCXX=1
+    export CROSS_COMPILE="armv7a-cros-linux-gnueabi-"
+    export CROSS_COMPILE_COMPILER="armv7a-cros-linux-gnueabi-clang"
+    export CLANG="/tools/arm/Google/clang_r127/armv7a/usr/bin/clang"
+    export MSTAR_CFLAG="--stdlib=libc++"
+    export MSTAR_CPPFLAG="--stdlib=libc++"
+    export MSTAR_CFLAG_OPT="--stdlib=libc++"
+    export MSTAR_LDFLAG="--stdlib=libc++ -Wl,--fatal-warnings -fPIC -Wl,-z,noexecstack -Wl,-z,now -Wl,-z,relro -Wl,-z,defs -pthread -Wl,-O1 -Wl,--gc-sections -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    if [ "$IN_AUTO_BUILD" = "1" ];then
+       export PATH=$AUTO_BUILD_ROOT/THEALE/toolchain/Google_armv7a-492_r145/bin/:$PATH
+    else
+       export PATH=/tools/arm/Google/clang_r127/armv7a/bin/:$PATH
+    fi
+elif [ "$LinaroAarch64_201409" = "1" ];then
+
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+echo -e "\e[01;31m   MSTAR_LDFLAG:This toolchian is about to be removed on 5/30 !! Please source /tools/ToolChainSetting LinaroAarch64_201409_p\e[00m"
+    export CROSS_COMPILE="aarch64-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="aarch64-linux-gnu-gcc"
+    export MSTAR_CFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CPPFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mlittle-endian -march=armv8-a -mabi=lp64 -O3 -funroll-loops -Wpointer-to-int-cast -Wint-to-pointer-cast"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/Linaro/gcc-linaro-aarch64-linux-gnu-4.9-2014.09_linux/bin/:$PATH
+
+elif [ "$LinaroAarch64_201409_p" = "1" ];then
+
+    export CROSS_COMPILE="aarch64-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="aarch64-linux-gnu-gcc"
+    export MSTAR_CFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CPPFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mlittle-endian -march=armv8-a -mabi=lp64 -O3 -funroll-loops -Wpointer-to-int-cast -Wint-to-pointer-cast"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/MStar/linaro_aarch64_linux-2014.09_r20170413/bin/:$PATH
+
+elif [ "$LinaroAarch64_721" = "1" ];then
+
+    export CROSS_COMPILE="aarch64-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="aarch64-linux-gnu-gcc"
+    export MSTAR_CFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CPPFLAG="-mlittle-endian -march=armv8-a -mabi=lp64 -O2 -ftree-loop-vectorize -ftree-slp-vectorize -fpredictive-commoning -fvect-cost-model=dynamic -Wpointer-to-int-cast -Wint-to-pointer-cast -Werror=undef"
+    export MSTAR_CFLAG_OPT="-mlittle-endian -march=armv8-a -mabi=lp64 -O3 -funroll-loops -Wpointer-to-int-cast -Wint-to-pointer-cast"
+    export MSTAR_LDFLAG="-Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=
+    export PATH=/tools/arm/Linaro/7.2.1/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu/bin/:$PATH
+
+elif [ "$SourceryMIPS_432" = "1" ];then
+
+    export CROSS_COMPILE="mips-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="mips-linux-gnu-gcc"
+    export MSTAR_CFLAG=" -EL -O2 -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CPPFLAG=" -EL -O2 -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CFLAG_OPT="-EL -O3 -funroll-loops"
+    export MSTAR_LDFLAG=" -EL -Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=" -EL "
+    export PATH=/tools/mips-4.3-51/mips-4.3/bin/:$PATH
+
+elif [ "$SourceryMIPS_472" = "1" ];then
+
+    export CROSS_COMPILE="mips-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="mips-linux-gnu-gcc"
+    export MSTAR_CFLAG=" -EL -O2 -fno-peephole2 -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CPPFLAG=" -EL -O2 -fno-peephole2 -ftree-slp-vectorize -fpredictive-commoning -funroll-loops -Werror=undef"
+    export MSTAR_CFLAG_OPT="-EL -O3 -fno-peephole2 -funroll-loops"
+    export MSTAR_LDFLAG=" -EL -Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=" -EL "
+    export PATH=/tools/mips/mips-2012.09/bin/:$PATH
+
+elif [ "$SourceryMIPS_483" = "1" ];then
+
+    export CROSS_COMPILE="mips-linux-gnu-"
+    export CROSS_COMPILE_COMPILER="mips-linux-gnu-gcc"
+    export MSTAR_CFLAG=" -O2 -EL -Werror=undef"
+    export MSTAR_CPPFLAG=" -O2 -EL -Werror=undef"
+    export MSTAR_CFLAG_OPT=" -O3 -EL -funroll-loops -floop-parallelize-all"
+    export MSTAR_LDFLAG=" -EL -Wl,--no-undefined -Wl,--as-needed"
+    export MSTAR_LDFLAG_OPT=" -EL"
+    export PATH=/tools/mips/mips-2014.05/bin/:$PATH
+
+else
+
+    echo -e "\033[41;0m No toolchain is set~  \033[0m"
+    echo -e "\033[41;0m use ToolChainSetting -l to check support list  \033[0m"
+fi
+}
+
+
+# Main Start
+
+if [ "$IN_AUTO_BUILD" = "1" ];then
+  echo -e "  "
+  echo -e "\033[45;1m In AUTO BUILD MODE  \033[0m"
+  echo -e "\033[44;0m Auto build root setting is : $AUTO_BUILD_ROOT \033[0m"
+  echo -e "  "
+fi
+
+
+if [ "$1" = "-l"  ];then
+   SupportList
+else
+   Reset
+   SET_INPUT=$1
+   Do_Set
+fi
+
+
+
+echo
+echo -e "\033[44;1m Setting Results \033[0m"
+echo -e "\e[01;32m   [Toolchain Prefix] CROSS_COMPILE=\e[00m $CROSS_COMPILE"
+echo -e "\e[01;33m   Using:\e[00m `which "$CROSS_COMPILE_COMPILER"`"
+echo -e "\e[01;34m   MSTAR_CFLAG:\e[00m$MSTAR_CFLAG "
+echo -e "\e[01;34m   MSTAR_CFLAG_OPT:\e[00m$MSTAR_CFLAG_OPT "
+echo -e "\e[01;34m   MSTAR_CPPFLAG:\e[00m$MSTAR_CPPFLAG "
+echo -e "\e[01;31m   MSTAR_LDFLAG:\e[00m$MSTAR_LDFLAG "
+echo
+

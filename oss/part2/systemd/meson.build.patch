@@ -1,0 +1,38 @@
+--- meson.build	2021-12-24 04:09:35.000000000 +0800
++++ ../../meson.build	2022-10-18 15:50:32.635991361 +0800
+@@ -1018,8 +1018,9 @@
+         conf.set10('BPF_FRAMEWORK', deps_found)
+ endif
+ 
+-libmount = dependency('mount',
+-                      version : fuzzer_build ? '>= 0' : '>= 2.30')
++#libmount = dependency('mount',
++#                      version : fuzzer_build ? '>= 0' : '>= 2.30')
++libmount = cc.find_library('mount')
+ 
+ want_libfdisk = get_option('fdisk')
+ if want_libfdisk != 'false' and not skip_deps
+@@ -1057,9 +1058,10 @@
+ 
+ want_selinux = get_option('selinux')
+ if want_selinux != 'false' and not skip_deps
+-        libselinux = dependency('libselinux',
+-                                version : '>= 2.1.9',
+-                                required : want_selinux == 'true')
++        #libselinux = dependency('libselinux',
++        #                        version : '>= 2.1.9',
++        #                        required : want_selinux == 'true')
++        libselinux = cc.find_library('selinux')
+         have = libselinux.found()
+ else
+         have = false
+@@ -1122,7 +1124,8 @@
+ 
+ want_blkid = get_option('blkid')
+ if want_blkid != 'false' and not skip_deps
+-        libblkid = dependency('blkid', required : want_blkid == 'true')
++        #libblkid = dependency('blkid', required : want_blkid == 'true')
++        libblkid = cc.find_library('blkid')
+         have = libblkid.found()
+ 
+         conf.set10('HAVE_BLKID_PROBE_SET_HINT',

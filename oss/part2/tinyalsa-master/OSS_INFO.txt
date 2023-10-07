@@ -1,0 +1,10 @@
+﻿NAME: tinyalsa-master
+VERSION: 2.0.0
+URL: https://github.com/tinyalsa/tinyalsa.git
+LICENSE: BSD
+OWNER: hungjung.hsu
+SOURCE: vendor/mediatek/proprietary-tv/apollo/oss/source/tinyalsa-master, apollo/oss/tinyalsa-master
+MTK_MODIFY: Yes
+USAGE: Dynamic Link
+INSTALL_PATH: Install path on platform
+COMMENT: Description of the OSS module

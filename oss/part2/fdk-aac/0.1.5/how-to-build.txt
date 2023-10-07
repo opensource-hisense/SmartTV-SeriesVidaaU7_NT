@@ -1,0 +1,20 @@
+1. Unzip
+  $ unzip fdk-aac-master.zip
+
+2. Build
+  $ cd fdk-aac-master
+  $ export CROSS_COMPILE=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi-
+  $ chmod 775 ./autogen.sh
+  $ ./autogen.sh
+  $ ./configure --host=x86_64-linux-gnu --target=arm-linux --enable-shared --prefix=$PWD/out \
+    CC=${CROSS_COMPILE}gcc \
+    CXX=${CROSS_COMPILE}g++ \
+    CFLAGS="-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon-vfpv4 -fPIC -fstack-protector" \
+    CXXFLAGS="-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon-vfpv4 -fPIC -fstack-protector"
+  $ make
+  $ make install
+  $ ${CROSS_COMPILE}gcc -shared -o out/lib/libfdk-aac.so -Wl,-z,relro -Wl,-z,now libAACdec/src/aacdec_drc.o libAACdec/src/aacdec_hcr.o libAACdec/src/aacdecoder.o libAACdec/src/aacdec_pns.o libAACdec/src/aac_ram.o libAACdec/src/block.o libAACdec/src/channelinfo.o libAACdec/src/ldfiltbank.o libAACdec/src/rvlcbit.o libAACdec/src/rvlc.o libAACdec/src/aacdec_hcr_bit.o libAACdec/src/aacdec_hcrs.o libAACdec/src/aacdecoder_lib.o libAACdec/src/aacdec_tns.o libAACdec/src/aac_rom.o libAACdec/src/channel.o libAACdec/src/conceal.o libAACdec/src/pulsedata.o libAACdec/src/rvlcconceal.o libAACdec/src/stereo.o libAACenc/src/aacenc.o libAACenc/src/aacEnc_ram.o libAACenc/src/band_nrg.o libAACenc/src/block_switch.o libAACenc/src/grp_data.o libAACenc/src/metadata_main.o libAACenc/src/pre_echo_control.o libAACenc/src/quantize.o libAACenc/src/tonality.o libAACenc/src/aacEnc_rom.o libAACenc/src/bandwidth.o libAACenc/src/channel_map.o libAACenc/src/intensity.o libAACenc/src/ms_stereo.o libAACenc/src/psy_configuration.o libAACenc/src/sf_estim.o libAACenc/src/transform.o libAACenc/src/aacenc_lib.o libAACenc/src/aacenc_tns.o libAACenc/src/bit_cnt.o libAACenc/src/chaosmeasure.o libAACenc/src/line_pe.o libAACenc/src/noisedet.o libAACenc/src/psy_main.o libAACenc/src/spreading.o libAACenc/src/aacenc_pns.o libAACenc/src/adj_thr.o libAACenc/src/bitenc.o libAACenc/src/dyn_bits.o libAACenc/src/metadata_compressor.o libAACenc/src/pnsparam.o libAACenc/src/qc_main.o libMpegTPDec/src/tpdec_adif.o libMpegTPDec/src/tpdec_adts.o libMpegTPDec/src/tpdec_asc.o libMpegTPDec/src/tpdec_drm.o libMpegTPDec/src/tpdec_latm.o libMpegTPDec/src/tpdec_lib.o libMpegTPEnc/src/tpenc_adif.o libMpegTPEnc/src/tpenc_adts.o libMpegTPEnc/src/tpenc_asc.o libMpegTPEnc/src/tpenc_latm.o libMpegTPEnc/src/tpenc_lib.o libSBRdec/src/env_calc.o libSBRdec/src/env_dec.o libSBRdec/src/env_extr.o libSBRdec/src/huff_dec.o libSBRdec/src/lpp_tran.o libSBRdec/src/psbitdec.o libSBRdec/src/psdec.o libSBRdec/src/psdec_hybrid.o libSBRdec/src/sbr_crc.o libSBRdec/src/sbr_deb.o libSBRdec/src/sbr_dec.o libSBRdec/src/sbrdec_drc.o libSBRdec/src/sbrdec_freq_sca.o libSBRdec/src/sbrdecoder.o libSBRdec/src/sbr_ram.o libSBRdec/src/sbr_rom.o libSBRenc/src/bit_sbr.o libSBRenc/src/env_bit.o libSBRenc/src/fram_gen.o libSBRenc/src/mh_det.o libSBRenc/src/ps_bitenc.o libSBRenc/src/ps_encode.o libSBRenc/src/resampler.o libSBRenc/src/sbr_encoder.o libSBRenc/src/sbr_ram.o libSBRenc/src/ton_corr.o libSBRenc/src/code_env.o libSBRenc/src/env_est.o libSBRenc/src/invf_est.o libSBRenc/src/nf_est.o libSBRenc/src/ps_main.o libSBRenc/src/sbrenc_freq_sca.o libSBRenc/src/sbr_misc.o libSBRenc/src/sbr_rom.o libSBRenc/src/tran_det.o libPCMutils/src/limiter.o libPCMutils/src/pcmutils_lib.o libFDK/src/autocorr2nd.o libFDK/src/dct.o libFDK/src/FDK_bitbuffer.o libFDK/src/FDK_core.o libFDK/src/FDK_crc.o libFDK/src/FDK_hybrid.o libFDK/src/FDK_tools_rom.o libFDK/src/FDK_trigFcts.o libFDK/src/fft.o libFDK/src/fft_rad2.o libFDK/src/fixpoint_math.o libFDK/src/mdct.o libFDK/src/qmf.o libFDK/src/scale.o libSYS/src/cmdl_parser.o libSYS/src/conv_string.o libSYS/src/genericStds.o libSYS/src/wav_file.o
+
+4. Install
+  $ cp -r out/include/* ../../../../library/gnuarm-5.5.0_neon_ca9/fdk-aac/0.1.5/include/
+  $ cp out/lib/libfdk-aac.so ../../../../library/gnuarm-5.5.0_neon_ca9/fdk-aac/0.1.5/lib/

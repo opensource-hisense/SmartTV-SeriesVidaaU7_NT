@@ -1,0 +1,103 @@
+#
+# This is a Shop Floor Animation file
+#
+# On the left you have the time line with relative values in ms.
+# Any data on the same line is ignored, so it can be used freely
+# for keeping track of the absolute time or adding comments.
+# 
+# Other lines have the following structure:
+#
+#	<command>	[<keyword>  <keyval>] ...
+#
+# Indention and spacing is totally up to you, but this way it looks quite clear.
+#
+
+4700	@ 4700
+	image	zoom  1900	time  7300	zoom  1800	pos  312,138	data  "philips_wordmark.png"
+
+
+3400	@ 8100
+	image	fade  500	time  47300	fade  700	pos  33,616	data  "rounded_panel.png"
+
+
+500	@ 8600
+	color	rgb   80d0ff
+	text	fade  500	time  2100	fade  500	pos  130,652	data  "The ultimate viewing experience with Philips technology"
+
+
+3100	@ 11700
+	image	zoom  600	time  3600	zoom  200	pos  188,626	data  "pixel_plus_text.png"
+	image	zoom  600	time  3600	zoom  200	pos  618,626	data  "ambi_light.png"
+	image	zoom  600	time  3600	zoom  200	pos  1026,626	data  "hd_ready.png"
+
+
+6000	@ 17700
+	image	zoom  600	time  2800	zoom  500	pos  72,626	data  "pixel_plus_text.png"
+
+700	@ 18400
+	color	rgb   60eed0
+	text	fade  500	time  1800	fade  400	pos  270,644	data  "Pixel Plus 3HD enhances image quality"
+
+
+
+3700	@ 22100
+	image	zoom  400	time  12400	zoom  400	pos  754,626	data  "pixel_plus_text.png"
+
+500	@ 22600
+	color	rgb   a0eeb0
+	text	fade  400	time  1500	fade  400	pos  944,644	data  "Ultimate sharpness"
+
+2450	@ 25050
+	text	fade  400	time  1500	fade  400	pos  944,644	data  "True natural detail"
+
+2450	@ 27500
+	text	fade  400	time  1500	fade  400	pos  944,644	data  "Incredible depth"
+
+2450	@ 29950
+	color	rgb   ffeea0
+	text	fade  400	time  1500	fade  400	pos  944,644	data  "Vivid colors"
+
+2450	@ 32400
+	color	rgb   a0eeb0
+	text	fade  400	time  1800	fade  400	pos  944,644	data  "Smooth natural motion"
+
+
+
+3500	@ 35900
+	image	zoom  400	time  9900	zoom  400	pos  72,626	data  "ambi_light.png"
+
+500	@ 36400
+	color	rgb   90ddff
+	text	fade  400	time  1500	fade  400	pos  270,644	data  "Creates a completely immersive viewing experience"
+
+2450	@ 38850
+	text	fade  400	time  1500	fade  400	pos  270,644	data  "Extends the image far beyond your screen"
+
+2450	@ 41300
+	text	fade  400	time  1500	fade  400	pos  270,644	data  "Improves picture detail, contrast and color"
+
+2450	@ 43750
+	color	rgb   b0cede
+	text	fade  400	time  1800	fade  400	pos  270,644	data  "And lessens eye strain"
+
+
+
+4050	@ 47800
+	image	zoom  400	time  7700	zoom  400	pos  72,626	data  "hd_ready.png"
+
+500	@ 48300
+	color	rgb   eeffcc
+	text	fade  400	time  1500	fade  400	pos  270,644	data  "High Definition - The broadcast standard of the future"
+
+2450	@ 50750
+	text	fade  400	time  1500	fade  400	pos  270,644	data  "Delivers a much higher resolution"
+
+2450	@ 53200
+	color	rgb   ffc060
+	text	fade  400	time  1600	fade  400	pos  270,644	data  "Philips Flat TVs are HD Ready and thus: Future Proof"
+
+
+9200
+
+#
+# loops back to beginning...

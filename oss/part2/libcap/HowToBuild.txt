@@ -1,0 +1,8 @@
+tar -xvf libcap-2.61.tar.xz
+cd libcap-2.61
+SECURITY_FLAGS="-O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -s"
+export CFLAGS=${SECURITY_FLAGS}
+export LDFLAGS=${SECURITY_FLAGS}
+export CPPFLAGS=${SECURITY_FLAGS}
+dockerq make CROSS_COMPILE=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64/bin/arm-linux-gnueabi- BUILD_CC=gcc
+dockerq make install prefix=$(pwd)/result

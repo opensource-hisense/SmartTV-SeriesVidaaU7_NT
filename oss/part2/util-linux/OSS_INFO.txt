@@ -1,0 +1,10 @@
+NAME=util-linux
+VERSION=2.37.4
+URL=https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git    ,    https://github.com/karelzak/util-linux    ,    https://www.kernel.org/pub/linux/utils/util-linux/
+LICENSE=GPLv2
+OWNER=Paul-bh.Wu
+SOURCE=oss/source/util-linux
+MTK_MODIFY=No
+USAGE=Program
+INSTALL_PATH=openbox/bin
+COMMENT=util-linux is a ramdom collection of Linux utilities

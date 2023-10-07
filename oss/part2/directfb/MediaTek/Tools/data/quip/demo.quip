@@ -1,0 +1,72 @@
+# Demo Quip File
+#
+# General syntax is:
+#
+#      <command> <key> <value>[ <value>[ <value>]][ <key> <value>[ <value>[ <value>]]]...
+#
+# Commands and keys/values are:
+#
+#      scene
+#          name   Mandatory scene name
+#          coords Optional coordinate space
+#
+#      slidebar
+#          image  Mandatory image file name
+#          edge   Optional edge (default is "left")
+#          scene  Optional scene to switch to on click
+#
+#      thumbnail
+#          image  Mandatory image file name
+#          pos    Optional position (default is 0 0)
+#          size   Optional size (default is image size)
+#
+# ...
+#
+
+
+#
+# Main scene
+#
+scene	name	"crossmenu"	coords	1280 720
+
+	image		data	"crossmenu_bg.png"
+	slidebar	image	"bar_left.png"		edge	left
+	slidebar	image	"bar_top.png"		edge	top
+	slidebar	image	"bar_right.png"		edge	right
+	slidebar	scene	"markingmenu"		edge	bottom
+
+#
+# Mosaic scene
+#
+scene	name	"markingmenu"	coords	1280 720
+
+	thumbnail	image	"thumb01.png"	pos	   0    0	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 256    0	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 512    0	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 768    0	size	256 144
+	thumbnail	image	"thumb01.png"	pos	1024    0	size	256 144
+
+	thumbnail	image	"thumb01.png"	pos	   0  144	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 256  144	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 512  144	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 768  144	size	256 144
+	thumbnail	image	"thumb01.png"	pos	1024  144	size	256 144
+
+	thumbnail	image	"thumb01.png"	pos	   0  288	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 256  288	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 512  288	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 768  288	size	256 144
+	thumbnail	image	"thumb01.png"	pos	1024  288	size	256 144
+
+	thumbnail	image	"thumb01.png"	pos	   0  432	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 256  432	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 512  432	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 768  432	size	256 144
+	thumbnail	image	"thumb01.png"	pos	1024  432	size	256 144
+
+	thumbnail	image	"thumb01.png"	pos	   0  576	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 256  576	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 512  576	size	256 144
+	thumbnail	image	"thumb01.png"	pos	 768  576	size	256 144
+	thumbnail	image	"thumb01.png"	pos	1024  576	size	256 144
+

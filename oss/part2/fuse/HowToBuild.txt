@@ -1,0 +1,10 @@
+tar -zxvf fuse-2.9.9.tar.gz
+
+HEADFILE_PATH="-O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -s -fPIE -pie"
+
+./configure CC=$(GCC) --host=arm-linux-gnueabi --prefix=$(pwd)/result CFLAGS="${HEADFILE_PATH}" LDFLAGS="${HEADFILE_PATH}"
+
+dockerq make
+
+dockerq make install
+

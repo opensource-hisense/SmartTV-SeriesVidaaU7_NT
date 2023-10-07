@@ -1,0 +1,10 @@
+NAME=inetutils
+VERSION=2.2
+URL=http://www.gnu.org/software/inetutils/
+LICENSE=GPLv2
+OWNER=lucius.yu
+SOURCE=oss/source/inetutils
+MTK_MODIFY=No
+USAGE=Program
+INSTALL_PATH=inetuils/bin
+COMMENT=network command like ping, we use syslogd only.

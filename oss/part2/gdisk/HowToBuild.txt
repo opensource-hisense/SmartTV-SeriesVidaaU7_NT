@@ -1,0 +1,19 @@
+It depends on libuuid.a which is built in oss/source/util-linux.
+So we need to build util-linux firstly in local.
+Then it generates include/uuid/uuid.h and lib/libuuid.a in library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.28.2 folder.
+
+util-linux build cmd:
+cd oss/source/util-linux
+dockerq make all install
+
+
+apply patch:
+patch -Nlp0 < ../gptfdisk-0.8.1.patch
+
+sgdisk build cmd:
+CC_FULLPATH=/mtkoss/gnuarm/gcc-arm-linux-gnu-5.5.0-ubuntu/x86_64
+CC_TOOL=bin/arm-linux-gnueabi-g++
+HEADFILE_PATH="-O2 -fstack-protector -D_FORTIFY_SOURCE=2 -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -s -fPIE -pie"
+export CXXFLAGS="${HEADFILE_PATH} -I../../../../library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.28.2/include -I../../../../library/gnuarm-5.5.0_neon_ca9/popt/1.16/include"
+export LDFLAGS="${HEADFILE_PATH} -L../../../../library/gnuarm-5.5.0_neon_ca9/util-linux/util-linux-2.28.2/lib -luuid -L../../../../library/gnuarm-5.5.0_neon_ca9/popt/1.16/lib -lpopt"
+dockerq make sgdisk CXX=${CC_FULLPATH}/${CC_TOOL}

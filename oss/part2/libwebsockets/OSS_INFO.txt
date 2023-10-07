@@ -1,0 +1,10 @@
+NAME=libwebsockets
+VERSION=3.0
+URL=https://libwebsockets.org/
+LICENSE=LGPL 2.1
+OWNER=caoping.hu
+SOURCE=oss/source/libwebsockets
+MTK_MODIFY=No
+USAGE=Program/Dynamic
+INSTALL_PATH=/basic/lib
+COMMENT=open source web socket server

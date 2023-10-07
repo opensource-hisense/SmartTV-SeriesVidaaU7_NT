@@ -1,0 +1,8 @@
+gopc_capture_src=DWIN_SRC_OP
+gopc_capture_scan_type=DWIN_SCAN_MODE_PROGRESSIVE
+gopc_capture_format=DWIN_DATA_FMT_RGB565
+gopc_capture_x=0
+gopc_capture_y=0
+gopc_capture_w=480
+gopc_capture_h=320
+gopc_capture_alphavalue=0x0f

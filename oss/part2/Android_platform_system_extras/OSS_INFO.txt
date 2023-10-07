@@ -1,0 +1,10 @@
+NAME=Android_platform_system_extras
+VERSION=16.0.1
+URL=https://android.googlesource.com/platform/system/extras
+LICENSE=Apache License 2.0
+OWNER=Jiahong.Lin
+SOURCE=oss/source/Android_platform_system_extras
+MTK_MODIFY=No
+USAGE=Showmap debug tool
+COMMENT=Only use the showmap debug tool
+INSTALL_PATH=/bin

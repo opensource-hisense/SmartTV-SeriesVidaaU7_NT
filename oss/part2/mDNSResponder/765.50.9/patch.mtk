@@ -1,0 +1,24 @@
+--- ./mDNSResponder-765.50.9_ori/mDNSPosix/PosixDaemon.c	2021-02-24 16:00:36.221358072 +0800
++++ ./mDNSResponder-765.50.9/mDNSPosix/PosixDaemon.c	2021-02-26 13:06:52.916547141 +0800
+@@ -107,7 +107,8 @@
+         else printf("Usage: %s [-debug]\n", argv[0]);
+     }
+
+-    if (!mDNS_DebugMode)
++    //if (!mDNS_DebugMode)
++    if (0)
+     {
+         int result = daemon(0, 0);
+         if (result != 0) { LogMsg("Could not run as daemon - exiting"); exit(result); }
+@@ -189,7 +190,10 @@
+     {
+         const struct passwd *pw = getpwnam("nobody");
+         if (pw != NULL)
+-            setuid(pw->pw_uid);
++        {
++            // w.o. call setuid due to Seccomp block setuid syscall
++            //setuid(pw->pw_uid);
++        }
+         else
+             LogMsg("WARNING: mdnsd continuing as root because user \"nobody\" does not exist");
+     }

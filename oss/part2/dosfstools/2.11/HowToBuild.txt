@@ -1,0 +1,7 @@
+tar -zxvf dosfstools-2.11.src.tar.gz
+
+cp dosfstools-2.11/Makefile_for_mtk_build dosfstools-2.11/Makefile
+
+cd dosfstools-2.11
+dockerq make CC=${gcc}
+

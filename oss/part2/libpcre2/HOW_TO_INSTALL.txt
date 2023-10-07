@@ -1,0 +1,6 @@
+Make the library:
+mosesq make all
+Install the library to prebuilt library place
+mosesq make install
+Clean the output:
+mosesq make clean

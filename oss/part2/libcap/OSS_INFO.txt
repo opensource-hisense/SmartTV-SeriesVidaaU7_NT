@@ -1,0 +1,10 @@
+NAME=libcap
+VERSION=2.61
+URL=https://git.kernel.org/pub/scm/libs/libcap/libcap.git/
+LICENSE=GPLv2/BSD
+OWNER=qingzhun.hu
+SOURCE=oss/source/libcap
+MTK_MODIFY= NO
+USAGE= so
+COMMENT=libcap is a library for getting and setting POSIX.1e draft 15 capabilities.
+INSTALL_PATH=basic

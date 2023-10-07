@@ -1,0 +1,73 @@
+
+Install instructions for the System V style init
+
+init, shutdown, halt, reboot, wall, last, mesg, runlevel,
+killall5, pidof, sulogin.
+
+All programs, files and scripts in this package are covered by
+the GNU General Public License version 2, and copyrighted by
+Miquel van Smoorenburg (1991-2004) and, Jesse Smith (2018). 
+
+If you are not using Debian and the debianized package,
+you may have to install the new init by hand if Debian is
+using an init system other than SysV (eg systemd). You should
+be able to drop the binaries into a Slackware or Devuan system, I think.
+
+The SysV init software, core programs and manual pages can be
+installed by running the following two commands from the top-level
+source directory.
+
+make
+sudo make install
+
+If sudo is not installed, the "make install" command may be run as
+the root user.
+
+Other than the GNU make utility, SysV init has few dependencies.
+SysV can be built on virtually any Linux system featuring
+the GNU C library or musl libc. A C compiler, such as the GNU Compiler
+Collection (GCC) or Clang is also required.
+
+Here is a list of preferred directories to install the progs & manpages,
+this should be done for you automatically when you run "make install"
+as the root user, or via sudo, ie "sudo make install".
+
+wall.1, last.1, mesg.1	   /usr/man/man1
+inittab.5, initscript.5	   /usr/man/man5
+init.8, halt.8, reboot.8,
+shutdown.8, powerd.8,
+killall5.8, pidof.8,
+runlevel.8, sulogin.8	   /usr/man/man8
+
+init			   /sbin/init
+inittab		   	   /etc/inittab
+initscript.sample          /etc/initscript.sample
+telinit		   	   a link (with ln(1) ) to init, either
+			   in /bin or in /sbin.
+halt			   /sbin/halt
+reboot			   a link to /sbin/halt in the same directory
+killall5		   /sbin/killall5
+pidof			   a link to /sbin/killall5 in the same directory.
+runlevel		   /sbin/runlevel
+shutdown		   /sbin/shutdown.
+wall			   /usr/bin/wall
+mesg			   /usr/bin/mesg
+last			   /usr/bin/last
+sulogin			   /sbin/sulogin
+bootlogd		   /sbin/bootlogd
+utmpdump                   don't install, it's just a debug thingy.
+
+If you already _have_ a "wall" in /bin (the SLS release had, for example)
+do _not_ install this version of wall. Chances are that the wall you are already
+using is linked to /bin/write. Either first _remove_ /bin/wall before
+installing the new one, or don't install the new one at all.
+
+You might want to create a file called "/etc/shutdown.allow". Read the
+manual page on shutdown to find out more about this.
+
+Running from a read-only file system (CDROM?):
+* All communication to init goes through the FIFO /run/initctl.
+  There should be no problem using a read-only root file system
+  If you use a Linux kernel > 1.3.66. Older kernels don't allow
+  writing to a FIFO on a read-only file system.
+ 

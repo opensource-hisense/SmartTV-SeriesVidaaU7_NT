@@ -1,0 +1,19 @@
+--- src/libmtp.sym        2020-07-20 19:00:55.000000000 +0800
++++ libmtp.sym  2021-05-31 20:01:54.481814090 +0800
+@@ -114,3 +114,15 @@
+ LIBMTP_TruncateObject
+ LIBMTP_Check_Capability
+ LIBMTP_Custom_Operation
++ptp_getstorageinfo
++ptp_getnumobjects
++ptp_getpartialobject
++ptp_mtp_getobjectpropssupported
++ptp_mtp_getobjectproplist
++ptp_getdeviceinfo
++ptp_getobjecthandles
++ptp_getobjectinfo
++ptp_getstorageids
++ptp_opensession
++ptp_mtp_getobjectpropvalue
++ptp_generic_no_data
+

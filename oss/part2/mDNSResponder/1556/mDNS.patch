@@ -1,0 +1,11 @@
+--- mDNSResponder-1556.80.2/mDNSCore/mDNS.c	2022-06-01 10:21:39.544568737 +0800
++++ mDNSResponder-1556.80.2/mDNSCore/mDNS_patch.c	2022-06-01 10:21:36.332112525 +0800
+@@ -7128,7 +7128,7 @@
+ 
+     // Scan list of registered records
+     for (rr = m->ResourceRecords; rr; rr = rr->next)
+-        if (!AuthRecord_uDNS(rr))
++        if (!AuthRecord_uDNS(rr) && rr->resrec.RecordType > kDNSRecordTypeDeregistering)
+             if (!mDNSOpaque64IsZero(&rr->updateIntID))
+             { LogSPS("mDNSCoreReadyForSleep: waiting for SPS updateIntID 0x%x 0x%x (updateid %d) %s", rr->updateIntID.l[1], rr->updateIntID.l[0], mDNSVal16(rr->updateid), ARDisplayString(m,rr)); goto spsnotready; }
+ 

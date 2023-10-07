@@ -1,0 +1,10 @@
+tar -zxvf simple-mtpfs-simple-mtpfs-0.2.tar.gz
+cd simple-mtpfs-simple-mtpfs-0.2/
+sh autogen.sh
+LIBMTP_PATH=$(pwd)/../../../library/gnuarm-10.2.1_neon_ca9/mtp/libmtp-1.1.18/
+LIBUSB1_PATH=$(pwd)/../../../library/gnuarm-10.2.1_neon_ca9/libusb/1.0.8/pre-install
+LIBFUSE_PATH=$(pwd)/../../../library/gnuarm-10.2.1_neon_ca9/fuse/2.9.9/pre-install
+LIBUSB0_PATH=$(pwd)/../../../library/gnuarm-10.2.1_neon_ca9/mtp/libusb-compat-0.1.2
+./configure CC=${gcc} CXX=${g++} --host=arm-linux --prefix=$(pwd)/result LDFLAGS="-L${LIBMTP_PATH}/lib  -lmtp -L${LIBUSB1_PATH}/lib -lusb-1.0 -L${LIBFUSE_PATH}/lib -lfuse -L${LIBUSB0_PATH}/lib -lusb-0.1" CPPFLAGS="-I${LIBMTP_PATH}/include -I${LIBUSB0_PATH}/include" FUSE_LIBS="-L${LIBFUSE_PATH}/lib" FUSE_CFLAGS="-I${LIBFUSE_PATH}/include -D_FILE_OFFSET_BITS=64" LIBUSB1_LIBS="-L${LIBUSB1_PATH}/lib" LIBUSB1_CFLAGS="-I${LIBUSB1_PATH}/include/libusb-1.0 -pthread"
+dockerq make
+dockerq make install

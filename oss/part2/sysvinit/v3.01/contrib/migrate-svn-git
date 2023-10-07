@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Script to migrate sysvinit project source code from subversion to git.
+# Used february 2018.
+
+authorsmap=$(tempfile)
+cat > $authorsmap <<EOF
+pere = Petter Reinholdtsen <pere@hungry.com>
+wfink = Werner Fink <werner@suse.de>
+EOF
+
+for p in sysvinit startpar insserv; do
+    git svn clone http://svn.savannah.nongnu.org/svn/sysvinit/$p \
+	--authors-file=$authorsmap \
+	--no-metadata \
+	--tags=tags \
+	--trunk=trunk \
+	--prefix=$p/ \
+	$p-git
+
+    (
+	cd $p-git
+	for tag in `git branch -r | grep "tags/" | sed "s/ $p\/tags\///"`; do
+            git tag -a -m"Converting SVN tags" $tag refs/remotes/$p/tags/$tag
+	done
+        if [ "sysvinit" = "$p" ]; then
+            remote=$p.git
+        else
+            remote=sysvinit/$p.git
+        fi
+        git remote add origin ssh://git.savannah.gnu.org:/srv/git/$remote
+    )
+done
+rm $authorsmap

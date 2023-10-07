@@ -1,0 +1,10 @@
+NAME=fdk-aac
+VERSION=0.1.5
+URL=https://github.com/mstorsjo/fdk-aac
+LICENSE=Software License for The Fraunhofer FDK AAC Codec Library for Android
+OWNER=Jeffrey Kuo
+SOURCE=oss/source/fdk-aac
+MTK_MODIFY=No
+USAGE=Dynamic Link
+INSTALL_PATH=/lib/
+COMMENT=FDK AAC Codec

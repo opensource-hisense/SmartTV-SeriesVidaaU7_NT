@@ -1,0 +1,11 @@
+NAME=strace
+VERSION=5.11
+URL=https://strace.io/
+LICENSE=LGPL-2.1-or-later
+OWNER=paul-bh.wu
+SOURCE=oss/source/strace
+MTK_MODIFY=No
+USAGE=Program
+RELEASE_SOURCE=Yes
+INSTALL_PATH=/bin
+COMMENT=A diagnostic, debugging and instructional userspace utility for Linux

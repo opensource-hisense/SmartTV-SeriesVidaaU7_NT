@@ -1,0 +1,11 @@
+NAME=avb
+VERSION=2.0
+URL=https://android.googlesource.com/platform/external/avb/+/master/libavb/
+LICENSE=PD
+OWNER=hsu.yang
+SOURCE=oss/source/avb
+MTK_MODIFY=Yes
+USAGE=Program
+INSTALL_PATH=lib
+COMMENT=library and binary utils for android verify boot
+RELEASE_SOURCE=Yes

@@ -1,0 +1,71 @@
+'\" -*- coding: UTF-8 -*-
+.\" A man page for fstab-decode(8).
+.\"
+.\" Copyright (C) 2006 Red Hat, Inc. All rights reserved.
+.\"
+.\" This copyrighted material is made available to anyone wishing to use,
+.\" modify, copy, or redistribute it subject to the terms and conditions of the
+.\" GNU General Public License v.2.
+.\"
+.\" This program is distributed in the hope that it will be useful, but WITHOUT
+.\" ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+.\" FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+.\" more details.
+.\"
+.\" You should have received a copy of the GNU General Public License along
+.\" with this program; if not, write to the Free Software Foundation, Inc.,
+.\" 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+.\"
+.\" Author: Miloslav Trmac <mitr@redhat.com>
+.TH fstab-decode 8 "May 2006"
+
+.SH NAME
+fstab-decode \- run a command with fstab-encoded arguments
+
+.SH SYNOPSIS
+\fBfstab-decode\fR \fICOMMAND\fR [\fIARGUMENT\fR]...
+
+.SH DESCRIPTION
+.B fstab-decode
+decodes escapes (such as newline characters and other whitespace) 
+in the specified \fIARGUMENT\fRs and uses them to run \fICOMMAND\fR.
+The argument escaping uses the same rules as path escaping in
+\fB/etc/fstab\fR,
+.B /etc/mtab
+and \fB/proc/mtab\fR.
+
+In essence fstab-decode can be used anytime we want to pass multiple
+parameters to a command as a list of command line arguments. It turns output
+like this:
+
+.nf
+/root
+/mnt/remote-disk
+/home
+
+Into one long list of parameters, "/root /mnt/remote-disk /home". This
+can be useful when trying to work with multiple filesystems at once. For
+instance, we can use it to unmount multiple NFS shares. This program also
+removes whitespace and other characters which might cause programs such
+as mount or umount to fail.
+
+.SH EXIT STATUS
+.B fstab-decode
+exits with status 127 if
+.I COMMAND
+can't be run.
+Otherwise it exits with the status returned by \fICOMMAND\fR.
+
+.SH EXAMPLES
+.nf
+The following example reads fstab, finds all instances of VFAT filesystems and
+prints their mount points (argument 2 in the fstab file). fstab-decode then runs 
+the specified program, umount, and passes it the list of VFAT mountpoints. 
+This unmounts all VFAT partitions.
+
+
+.B fstab-decode umount $(awk \[aq]$3 == \[dq]vfat\[dq] { print $2 }\[aq] /etc/fstab)
+.fi
+
+.SH SEE ALSO
+.BR fstab (5)

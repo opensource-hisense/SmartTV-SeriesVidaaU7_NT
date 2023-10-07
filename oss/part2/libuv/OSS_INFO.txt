@@ -1,0 +1,10 @@
+NAME=libuv
+VERSION=libuv-v1.20.3
+https://libuv.org
+LICENSE=MIT License
+OWNER=caoping.hu
+SOURCE=oss/source/libuv
+MTK_MODIFY=No
+USAGE=Program/Dynamic
+INSTALL_PATH=/basic/lib
+COMMENT=open source async io library

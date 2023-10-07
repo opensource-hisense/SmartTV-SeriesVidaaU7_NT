@@ -1,0 +1,62 @@
+cc_library {
+    name: "libtinyalsa-master",
+    host_supported: true,
+    vendor_available: true,
+    srcs: [
+        "src/mixer.c",
+        "src/mixer_hw.c",
+        "src/mixer_plugin.c",
+        "src/pcm.c",
+        "src/pcm_hw.c",
+        "src/pcm_plugin.c",
+        "src/snd_card_plugin.c",
+    ],
+    cflags: ["-Werror", "-Wno-macro-redefined", "-DTINYALSA_USES_PLUGINS", "-DSNDRV_PCM_IOCTL_TTSTAMP"],
+    export_include_dirs: ["include"],
+    local_include_dirs: ["include"],
+    target: {
+        darwin: {
+            enabled: false,
+        },
+    },
+
+    system_shared_libs: ["libc", "libdl"],
+}
+
+cc_binary {
+    name: "tinyplay-master",
+    host_supported: true,
+    vendor: true,
+    srcs: ["utils/tinyplay.c"],
+    shared_libs: ["libtinyalsa-master"],
+    cflags: ["-Werror"],
+    target: {
+        darwin: {
+            enabled: false,
+        },
+    },
+}
+
+cc_binary {
+    name: "tinycap-master",
+    vendor: true,
+    srcs: ["utils/tinycap.c"],
+    shared_libs: ["libtinyalsa-master"],
+    cflags: ["-Werror"],
+}
+
+cc_binary {
+    name: "tinymix-master",
+    vendor_available: true,
+    srcs: ["utils/tinymix.c"],
+    shared_libs: ["libtinyalsa-master"],
+    cflags: ["-Werror", "-Wall"],
+}
+
+cc_binary {
+    name: "tinypcminfo-master",
+    vendor_available: true,
+    srcs: ["utils/tinypcminfo.c"],
+    shared_libs: ["libtinyalsa-master"],
+    cflags: ["-Werror"],
+}

@@ -1,0 +1,268 @@
+diff -urN tar-1.17/lib/argp-fmtstream.c tar-1.17.mtk/lib/argp-fmtstream.c
+--- tar-1.17/lib/argp-fmtstream.c	2006-03-13 17:17:24.000000000 +0800
++++ tar-1.17.mtk/lib/argp-fmtstream.c	2019-12-06 09:32:10.700746879 +0800
+@@ -30,6 +30,7 @@
+ #include <stdarg.h>
+ #include <ctype.h>
+ 
++#include "argp.h"
+ #include "argp-fmtstream.h"
+ #include "argp-namefrob.h"
+ 
+@@ -432,4 +433,76 @@
+ #endif
+ #endif
+ 
++/* Set __FS's left margin to __LMARGIN and return the old value.  */
++size_t
++__argp_fmtstream_set_lmargin (argp_fmtstream_t __fs, size_t __lmargin)
++{
++  size_t __old;
++  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
++    __argp_fmtstream_update (__fs);
++  __old = __fs->lmargin;
++  __fs->lmargin = __lmargin;
++  return __old;
++}
++
++/* Set __FS's right margin to __RMARGIN and return the old value.  */
++size_t
++__argp_fmtstream_set_rmargin (argp_fmtstream_t __fs, size_t __rmargin)
++{
++  size_t __old;
++  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
++    __argp_fmtstream_update (__fs);
++  __old = __fs->rmargin;
++  __fs->rmargin = __rmargin;
++  return __old;
++}
++
++/* Set FS's wrap margin to __WMARGIN and return the old value.  */
++size_t
++__argp_fmtstream_set_wmargin (argp_fmtstream_t __fs, size_t __wmargin)
++{
++  size_t __old;
++  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
++    __argp_fmtstream_update (__fs);
++  __old = __fs->wmargin;
++  __fs->wmargin = __wmargin;
++  return __old;
++}
++
++/* Return the column number of the current output point in __FS.  */
++size_t
++__argp_fmtstream_point (argp_fmtstream_t __fs)
++{
++  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
++    __argp_fmtstream_update (__fs);
++  return __fs->point_col >= 0 ? __fs->point_col : 0;
++}
++
++void
++__argp_usage (const struct argp_state *__state)
++{
++  __argp_state_help (__state, stderr, ARGP_HELP_STD_USAGE);
++}
++
++int
++__option_is_short (const struct argp_option *__opt)
++{
++  if (__opt->flags & OPTION_DOC)
++    return 0;
++  else
++    {
++      int __key = __opt->key;
++      return __key > 0 && __key <= UCHAR_MAX && isprint (__key);
++    }
++}
++
++int
++__option_is_end (const struct argp_option *__opt)
++{
++  return !__opt->key && !__opt->name && !__opt->doc && !__opt->group;
++}
++
++
++
++
+ #endif /* !ARGP_FMTSTREAM_USE_LINEWRAP */
+diff -urN tar-1.17/lib/argp-fmtstream.h tar-1.17.mtk/lib/argp-fmtstream.h
+--- tar-1.17/lib/argp-fmtstream.h	2006-01-12 04:24:05.000000000 +0800
++++ tar-1.17.mtk/lib/argp-fmtstream.h	2019-12-06 09:32:10.716746954 +0800
+@@ -186,9 +186,18 @@
+ /* Inline versions of above routines.  */
+ 
+ #if !_LIBC
++#if 1
++#define __argp_fmtstream_putc(fs,ch) putc(ch,fs->stream)
++#define argp_fmtstream_putc(fs,ch) putc(ch,fs->stream)
++#define __argp_fmtstream_puts(fs,str) fputs(str,fs->stream)
++#define argp_fmtstream_puts(fs,str) fputs(str,fs->stream)
++#define __argp_fmtstream_write(fs,str,len) fwrite(str,1,len,fs->stream)
++#define argp_fmtstream_write(fs,str,len) fwrite(str,1,len,fs->stream)
++#else
+ #define __argp_fmtstream_putc argp_fmtstream_putc
+ #define __argp_fmtstream_puts argp_fmtstream_puts
+ #define __argp_fmtstream_write argp_fmtstream_write
++#endif
+ #define __argp_fmtstream_set_lmargin argp_fmtstream_set_lmargin
+ #define __argp_fmtstream_set_rmargin argp_fmtstream_set_rmargin
+ #define __argp_fmtstream_set_wmargin argp_fmtstream_set_wmargin
+@@ -201,87 +210,6 @@
+ #define ARGP_FS_EI extern inline
+ #endif
+ 
+-ARGP_FS_EI size_t
+-__argp_fmtstream_write (argp_fmtstream_t __fs,
+-			const char *__str, size_t __len)
+-{
+-  if (__fs->p + __len <= __fs->end || __argp_fmtstream_ensure (__fs, __len))
+-    {
+-      memcpy (__fs->p, __str, __len);
+-      __fs->p += __len;
+-      return __len;
+-    }
+-  else
+-    return 0;
+-}
+-
+-ARGP_FS_EI int
+-__argp_fmtstream_puts (argp_fmtstream_t __fs, const char *__str)
+-{
+-  size_t __len = strlen (__str);
+-  if (__len)
+-    {
+-      size_t __wrote = __argp_fmtstream_write (__fs, __str, __len);
+-      return __wrote == __len ? 0 : -1;
+-    }
+-  else
+-    return 0;
+-}
+-
+-ARGP_FS_EI int
+-__argp_fmtstream_putc (argp_fmtstream_t __fs, int __ch)
+-{
+-  if (__fs->p < __fs->end || __argp_fmtstream_ensure (__fs, 1))
+-    return *__fs->p++ = __ch;
+-  else
+-    return EOF;
+-}
+-
+-/* Set __FS's left margin to __LMARGIN and return the old value.  */
+-ARGP_FS_EI size_t
+-__argp_fmtstream_set_lmargin (argp_fmtstream_t __fs, size_t __lmargin)
+-{
+-  size_t __old;
+-  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
+-    __argp_fmtstream_update (__fs);
+-  __old = __fs->lmargin;
+-  __fs->lmargin = __lmargin;
+-  return __old;
+-}
+-
+-/* Set __FS's right margin to __RMARGIN and return the old value.  */
+-ARGP_FS_EI size_t
+-__argp_fmtstream_set_rmargin (argp_fmtstream_t __fs, size_t __rmargin)
+-{
+-  size_t __old;
+-  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
+-    __argp_fmtstream_update (__fs);
+-  __old = __fs->rmargin;
+-  __fs->rmargin = __rmargin;
+-  return __old;
+-}
+-
+-/* Set FS's wrap margin to __WMARGIN and return the old value.  */
+-ARGP_FS_EI size_t
+-__argp_fmtstream_set_wmargin (argp_fmtstream_t __fs, size_t __wmargin)
+-{
+-  size_t __old;
+-  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
+-    __argp_fmtstream_update (__fs);
+-  __old = __fs->wmargin;
+-  __fs->wmargin = __wmargin;
+-  return __old;
+-}
+-
+-/* Return the column number of the current output point in __FS.  */
+-ARGP_FS_EI size_t
+-__argp_fmtstream_point (argp_fmtstream_t __fs)
+-{
+-  if ((size_t) (__fs->p - __fs->buf) > __fs->point_offs)
+-    __argp_fmtstream_update (__fs);
+-  return __fs->point_col >= 0 ? __fs->point_col : 0;
+-}
+-
+ #if !_LIBC
+ #undef __argp_fmtstream_putc
+ #undef __argp_fmtstream_puts
+diff -urN tar-1.17/lib/argp.h tar-1.17.mtk/lib/argp.h
+--- tar-1.17/lib/argp.h	2007-03-30 15:09:11.000000000 +0800
++++ tar-1.17.mtk/lib/argp.h	2019-12-06 09:32:10.752747123 +0800
+@@ -583,29 +583,7 @@
+ #  define ARGP_EI extern __inline__
+ # endif
+ 
+-ARGP_EI void
+-__argp_usage (const struct argp_state *__state)
+-{
+-  __argp_state_help (__state, stderr, ARGP_HELP_STD_USAGE);
+-}
+ 
+-ARGP_EI int
+-__NTH (__option_is_short (const struct argp_option *__opt))
+-{
+-  if (__opt->flags & OPTION_DOC)
+-    return 0;
+-  else
+-    {
+-      int __key = __opt->key;
+-      return __key > 0 && __key <= UCHAR_MAX && isprint (__key);
+-    }
+-}
+-
+-ARGP_EI int
+-__NTH (__option_is_end (const struct argp_option *__opt))
+-{
+-  return !__opt->key && !__opt->name && !__opt->doc && !__opt->group;
+-}
+ 
+ # if !_LIBC
+ #  undef __argp_usage
+diff -urN tar-1.17/src/create.c tar-1.17.mtk/src/create.c
+--- tar-1.17/src/create.c	2007-06-01 18:17:10.000000000 +0800
++++ tar-1.17.mtk/src/create.c	2019-12-06 09:32:10.788747291 +0800
+@@ -575,7 +575,8 @@
+   GNAME_TO_CHARS (tmpname, header->header.gname);
+   free (tmpname);
+ 
+-  strcpy (header->header.magic, OLDGNU_MAGIC);
++  strcpy (header->buffer + offsetof (struct posix_header, magic),
++	  OLDGNU_MAGIC);
+   header->header.typeflag = type;
+   finish_header (st, header, -1);
+ 
+@@ -907,7 +908,9 @@
+     case OLDGNU_FORMAT:
+     case GNU_FORMAT:   /*FIXME?*/
+       /* Overwrite header->header.magic and header.version in one blow.  */
+-      strcpy (header->header.magic, OLDGNU_MAGIC);
++      //strcpy (header->header.magic, OLDGNU_MAGIC);
++      strcpy (header->buffer + offsetof (struct posix_header, magic),
++        OLDGNU_MAGIC);
+       break;
+ 
+     case POSIX_FORMAT:
+diff -urN tar-1.17/src/list.c tar-1.17.mtk/src/list.c
+--- tar-1.17/src/list.c	2007-06-08 16:14:42.000000000 +0800
++++ tar-1.17.mtk/src/list.c	2019-12-06 09:32:10.820747441 +0800
+@@ -544,7 +544,8 @@
+       else
+ 	format = USTAR_FORMAT;
+     }
+-  else if (strcmp (header->header.magic, OLDGNU_MAGIC) == 0)
++  else if (strcmp (header->buffer + offsetof (struct posix_header, magic),
++		   OLDGNU_MAGIC) == 0)
+     format = OLDGNU_FORMAT;
+   else
+     format = V7_FORMAT;

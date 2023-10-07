@@ -1,0 +1,1212 @@
+sysvinit (3.01) released; urgency=low
+    * Default to showing processes in the uninterruptable state (D).
+    The -z flag no longer affects whether processes in D state are shown.
+    The -z flag does still toggle whether zombie (Z) processes are shown.
+
+    * Removed unnecessary check which is always true from init tab parsing.
+
+sysvinit (3.00) released; urgency=low
+
+    * Applied patch from Matthias Schiffer which allows bootlogd to read from
+      a wider range of consoles. The console name is already passed in from the
+      kernel command line using "console=". We no longer filter out names as strictly
+      but do now check to confirm the "console=" device points to a valid TTY.
+
+sysvinit (2.99) released; urgency=low
+
+    * Fixed typos and missing underlines in shutdown manual page.
+      Corrections provided by Helge Kreutzmann.
+
+sysvinit (2.98) released; urgency=low
+
+    * Fixed time parsing in shutdown when there is a + in front of a 0 time offset.
+      Commands with a positive time offset (+1) would work but +0 fails.
+      This has been corrected by Arkadiusz Miskiewicz.
+
+sysvinit (2.97) released; urgency=low
+
+    * Check $(ROOT) filesystem for libcrypt instead of a hardcoded path to /usr.
+      Added logsave and readbootlog to list of files git ignores.
+      - Patches provided by Petr Ovtchenkov.
+
+    * Code clean-up and making sure we avoid freeing unused memory.
+      Patch provided by David Hoyer.
+
+    * Added shell script from Trek which converts systemd unit files
+      into init.d style scripts.
+
+    * Added patch from Didier Gaudin which allows init to load configuration
+      data from files stored in /etc/inittab.d/
+
+    * Added patch from William Shipley which allows shutdown time to be specified
+      in the format +hh:mm. This is in addition to the existing formats such as
+      hh:mm, +m, and "now".
+
+    * Fixed typos in manual pages. Submitted by Helge Kreutzmann.
+
+
+sysvinit (2.96) released; urgency=low
+
+  [ Jesse Smith ]
+
+    * Added -z command line parameter to pidof which tells pidof to
+      try to find processes in uninterruptible (D) or zombie (Z) states.
+      This can cause pidof to hang, but produces a more complete process
+      list.
+      Closes Savannah bug #56534
+
+    * Reformatted init code to make if/while logic more clear.
+
+    * Cleaned up some output from readbootlog.
+
+    * Added -e flag to bootlogd. When -e is used, data saved
+      to the boot log file does not have escape characters
+      removed. This means colour and cursor movement codes
+      stay in the log file. The may then look nicer when
+      read with "less -R', but may appear cluttered or
+      out of alignment when viewed with other, plain-text tools.
+      When -e is not used, escape characters are removed/filtered.
+      Closes Debian bug #672361.
+
+    * Make sure src/Makefile cleans up all executable files
+      when parent Makefile calls "make clean".
+
+
+sysvinit (2.95) released; urgency=low
+
+  [ Jesse Smith ]
+
+    * Fixed various typos and control codes in manual pages.
+      Patch provided by Bjarni Ingi Gislason.
+    * Dropped "-f" format flag for pidof command as it
+      could be used to print information from memory or crash
+      pidof. Replaced flag with "-d" which allows for a custom
+      separator to be used between listed PIDs.
+      Patch supplied by KatolaZ.
+    * Updated manual page to describe -h and its modifiers (-H and -P)
+      in more detail. Should close Debian bug #374039.
+    * Use millisecond delays in init so that shutdown
+      can happen without a near-full-second delay after
+      all processes have terminated. Replaced do_sleep()
+      with do_msleep(), provided by Serge Belyshev.
+    * Replaced hardwired sleep constants in init.c with
+      defined constants for easy updating in the future.
+    * Accepted patch from Luc Gommans which explains why zombie and
+      deep sleep processes (Z and D) may be hidden from pidof.
+    * Removed link instruction against sepol library from src/Makefile.
+      This has no change to the resulting binary, just makes the
+      Makefile cleaner.
+
+sysvinit (2.94) released; urgency=low
+
+  [ Jesse Smith ]
+
+    * When the halt command is called with the -p flag (or as poweroff)
+      the command now passes the "-h -P" flags to shutdown. This
+      in turn sets the INIT_HALT environment variable to POWEROFF.
+      Assuming this value is checked by initscripts during the
+      shutting down procedure, it should cause the system to
+      be powered off.
+      If halt is called without -p then the value of INIT_HALT
+      is not set and the default action (often set in /etc/default/halt)
+      is taken.
+    * Removed unnecessary malloc.h includes. Memory allocation
+      and freeing is now handled in stdlib.h
+    * Added defines for FreeBSD to make some components compile
+      on FreeBSD 11.
+    * Increased the size of the kernel command line buffer in bootlogd
+      from 256 characters to 4096. This size is defined in KERNEL_COMMAND_LENGTH
+      for easy modification downstream.
+    * Added logsave.c and logsave.8 manual page from e2fsprogs to make
+      sure logsave is available to initscripts.
+    * Updated src/Makefile to make sure bootlogd compiles with Clang.
+    * Use defined constants for password length in sulogin. Makes
+      it easier to update/patch later.
+    * Minor code fixes across multiple source files to avoid buffer
+      overflows, or uninitialized strings.
+    * Changed the way the "when" variable is used internally in shutdown.c.
+      It starts as a NULL pointer, then might get set as a pointer to optarg,
+      then it might get set to point to an argv parameter, then it might have
+      a string value copied into it, over-writing the original data. We should
+      not risk over-writing internal variables which might get used for something
+      else (it's rude and security risk). Set up "when" as its own buffer
+      that has data from optargs and/or argv copied into it.
+    * Fixed typo in init.8 manual page.
+    * Updated text of fstab-decode to explain what the utility does.
+
+
+sysvinit (2.93) released; urgency=low
+
+  [ Jesse Smith ]
+
+    * Fixed typo in pidof which would prevent the -o (omit PID)
+      flag from working.
+      Fixes Debian bug ##913394.
+    * Fixed error where pidof would not omit checking PIDs passed
+      to it when the -o flag was used.
+      Fixes Debian bug #913394.
+
+
+sysvinit (2.92) released; urgency=low
+
+  [ Jesse Smith ]
+
+    * The shutdown and init commands were using different default delays between
+      sending processes SIGTERM and SIGKILL - they were 3 and 5 seconds, respectively.
+      Unified these on 3 seconds, using a new defined value in init.h.
+      Updated shutdown manual page to reflect the change and better explain
+      how -t and -n flags work.
+      Updated the init manual page with the new default value.
+      The updated documentation resolves Debian bug #375274.
+    * Remove PC speaker beep from shutdown process in dowall.c.
+      Closes Debian bug #614893.
+      Patch provided by Andreas Fackler.
+    * Removed unused Version variable from wall.c.
+    * Updated halt/reboot manual page to acknowledge the -i
+      flag may not properly shut down network interfaces if the interface
+      does not have an IP address.
+      Addresses Debian bug #361935.
+    * Applied patch from Daniel Povey which should allow killall5/pidof to
+      avoid locking up if it encounters stopped or zombie processes 
+      due to broken NFS mount points.
+      This should allow Debian bug #719273 to be closed.
+    * Applied patch from Regid Ichira to clarify shutdown command
+      line options. Updated manual page for shutdown.
+      Closes Debian bug #630661.
+    * shutdown command was setting environment variable INIT_HALT to 
+      "POWERDOWN", this should have been "POWEROFF" as specified in the
+      manual page. Fixed code to match manual page and init scripts.
+      Closes Debian bugs #717531 and #590895
+    * Added -l flag to "last" command. When used it allows "last" to
+      display usernames longer than 8 characters long.
+    * Added -q and -Q flags to shutdown command to make the "system is going down"
+      message appear less often. The -q flag causes messages to only appear at the
+      10 minute, 5 minute and x-hour intervals.
+      The -Q flag maintains complete silence up until the final "now" warning.
+    * Mention GRUB as a potential boot loader in init page since LILO is
+      rarely used anymore, outside of Slackware.
+    * Swapped out ECHOPRT for ECHOE in stty settings when init brings up
+      emergency console. Should make backspace-erasing characters work
+      more naturally.
+      Closes Debian bug #402847.
+    * Updated src/Makefile to make sure we build all the software before
+      attempting to install.
+    * Removed typos from pidof manual page and killall5 page.
+      Closes Debian bugs #815839, #905245 and #890478
+    * Added -f <format> option to pidof program to allow printf
+      style formatting.
+      Closes Debian bug #571590
+      Thanks to Philipp Marek for the patch.
+    * Added new tool (readbootlog) which will read the /var/log/boot file
+      produced by bootlogd. The output is displayed cleaned up so there
+      are no control characters. This avoids the need to use sed or related
+      tools to try to clean up the contents of the log.
+    * Added manual page for readbootlog program. Updated bootlogd page
+      to reference it. Closes Debian bug #725123.
+    * Updated the shutdown manual page to try to make it more clear
+      where we are talking about an initscript called halt or the halt
+      program. Likewise whether we are talking about the shutdown process
+      or the specific shutdown program.
+      Should address Debian bug #374039.
+    * Added patch from Samuel Thibault to make project compile
+      on Hurd branch of Debian.
+
+
+sysvinit (2.91) world; urgency=low
+
+  [ Jesse Smith ]
+
+    * Adjusted order of compile flags to make it easier for downstream
+      to adjust optimization level. Patch provided by Matias Fonzo.
+      Can now set optimization level in CFLAGS variable.
+    * Added --version command line flag to display current version info.
+      Updated manual page for init.8 to match.
+    * Version information is now fetched and defined by the Makefile.
+      No more need to update the version manually in the init.c source.
+    * The init process now writes the current runlevel to /var/run/runlevel.
+      This information can be read by the "runlevel" command as well as "halt"
+      and "reboot". Having the information logged in /var/run/runlevel as
+      well as the utmp file means systems without utmp (like those running
+      the musl C library) can still check the current runlevel. This is
+      useful when running halt/reboot as these programs want to check the
+      runlevel.
+    * Added patch from Walter Harms which allows pidof to run without
+      displaying output. In this mode pidof simply returns true or false
+      without displaying PID values.
+      Updated manual page with new -q (quiet) mode.
+      Added -h flag for pidof, which was recognized before, but not used.
+      The -h flag now displays brief usage information for pidof.
+    * Added check for kernel parameter init.autocon=1. If this exists, then
+      init will try to open its own console. If not, then any console=
+      parameters will be ignored. This avoids conflicts with native kernel
+      created consoles.
+
+sysvinit (2.90) world; urgency=low
+
+  [ Jesse Smith ]
+    * Updated some comments in init.c to answer questions or
+      remove old notes we no longer need.
+    * Removed unneeded "count" variable in utmpdump.c.
+    * Fixed typo in accidental wrote_wtmp_rlevel == 0 || wrote_wtmp_rlevel 
+      comparison so the latter is wrote_utmp_rlevel.
+    * Simplified logic in mountpoint.c when testing for same device or same inode.
+      Thanks to David Binderman for pointing out the above three issues.
+    * When we run shutdown and then the computer is put to sleep, the
+      shutdown command recognizes time has passed and continues its
+      countdown taking the time lapse into consideration. This prevents
+      longer waits if we slept past the time we should have shutdown.
+      Accurate to the nearest minute.
+      Closes Savannah bug #36279.
+    * Added document article and manual page for the initctl (/run/initctl)
+      named pipe. Makes it easier for people to communicate with and
+      extend communication to init.
+    * Added check that named pipe is open before trying to close it
+      when something goes wrong or we receive SIGUSER1. Avoids potential
+      crash if we receive SIGUSR1 while pipe is not open.
+    * Added new signal handler for SIGUSR2. When init receives SIGUSR2
+      it closes (and leaves closed) the named pipe /run/initctl. This
+      can be used to make sure init does not have any files open. However,
+      it also means we cannot switch run levels or bring down the system.
+      The pipe can be re-opened by sending init the SIGUSR1 signal.
+    * Added "Fall through" comments to some switch statements where multiple
+      approaches are tried in order to prevent warnings from GCC 7 (and newer).
+      (Thanks to Matias Fonzo for this fix.)
+    * Added includes on Linux for sys/sysmacros.h as the old defines in
+      the sys/types.h file will be removed in the future.
+      (Thanks to Matias Fonzo for this fix.)
+    * Removed old LSM file.
+      Added .gitignore files to avoid git tracking object files.
+      Removed old start-stop-daemon from contrib directory.
+      (Patches provided by Guillem Jover.)
+    * Cleaned up most warnings generated by GCC 7 & 8. We still
+      get some from faulty "nonstring" reports, but silencing them on
+      GCC 8 results in more warnings on GCC 7 and Clang, so leaving them
+      for now.
+    * Fixed compile error on Fedora 28 where crypt() will not link due to
+      undocumented dependency change.
+    * Updated Makefile to make sure correct version number and correct
+      version of files are used. Makefile was pulling from master to create
+      tarballs with old version information when trying to create beta
+      snapshot.
+    * Updated version information in init.c
+    * Updated compiler flag from -fstack-protector to -fstack-protector-strong
+      for better protection.
+    * Cleaned up toplevel Makefile so it stops creating unnecessary temporary
+      directories.
+    * Fixed typo in mountpoint.c. Patch provided by Radostin Stoyanov.
+
+
+sysvinit (2.89) world; urgency=low
+
+  [ Jesse Smith ]
+    * Updated mountpoint command with -p flag. The -p flag causes
+      mountpoint to search for circular mount points. For example, if
+      /a/b/c/d is a mount point for /a/b then the former is a valid
+      mount point. This only works on Linux since it uses /proc/mounts.
+      Updated manual page to match. This fix closes Savannah bug #37114.
+    * Removed two sleep calls when we are doing sync anyway to make sure
+      data is being written. Speeds up reboot time by about two seconds.
+    * Fixed Clang compiler warning regarding variable data parameters to sprintf().
+    * Updated top-level Makefile to work with git repo instead of old svn repo.
+    * Removed unused variables and findtty() function in bootlogd
+    * Add checks to return code for fscanf() called in init.c.
+      This mostly just cleans up compiler warnings.
+    * Perform error check on setuid() call as suggested in manual page.
+    * Fix typo in killall5.c
+      Move initscript sample file from "src" to "doc" directory and updated
+      Makefile to match.
+    * Allow multiple console output
+    When booting a kernel with multiple serial console support, or multuiple
+    console arguments ala "console=tty1 console=ttyS0,9600" the kernel will output
+    messages to all consoles, init however will not. It will only send output to,
+    and accept input from, the last of the consoles.
+    This patch fixes it.
+    (Patch provided by Martin Buck.)
+    * Added Patch from Debian developer Mats Erik Andersson to make
+    ioctl work on GNU/kFreeBSD. Patches bootlogd.
+    * Added Robert Millan's Debian patch to set TERM variable to xterm (instead
+    of cons25) when running on GNU/kFreeBSD.
+    * Added Robert Millan's Debian patch to use /run/initctl as the named
+    pipe for communicating. This works around a limitation on the kFreeBSD
+    branch which prevents us from using /dev/initctl for pipes.
+    * Confirmed we have applied Guillem Jover's patch to make
+    ifdown work on FreeBSD.
+    * Confirmed we have Debian patch to fix enabling SELinux.
+    (Credit to Petter Reinholdtsen)
+    * Confirmed we have Debian patch to make sure utf-8 flag is not cleared from tty.
+    (Credit to Samuel Thibault)
+    * Confirmed we have Roger Leigh's Makefile patch to allow building
+    with multiarch libcrypt.
+    * Applied Justus Winter's symlink patch to make sure killall5
+    builds and runs on Hurd.
+    * Confirmed we have Werner Fink's PATH_MAX patch for getting
+    killall5 to build on Hurd.
+    * Made sure we have Petter Reinholdtsen's patch to init.c which
+    allows init to build on GNU/kFreeBSD despite missing VSWTC.
+     * Dropping Debian patch to use /run/nologin instead of /etc/nologin in paths.h.
+    Seems every distribution uses a different location. Oracle uses /etc/nologin,
+    CentOS seems to use /var/run/nologin.
+    We will use /etc/nologin and let distros patch to suit their own preference.
+    * Updated halt.8 man page with corrections from
+    Christoph Anton Mitterer.
+    * Confirmed we have applied patch from Bjarni Ingi Gislason
+    which fixes typo in fstab-decode man page.
+    * Applied Debian patch to allow init to build on GNU Hurd.
+    (Credit: Roger Leigh)
+    * Confirmed we have Debian patch from developer Johannes Truschnigg
+    which informs the user of field size limit.
+    * Applied patch from Debian to the init manual page (init.8)
+    to better address runlevels. (Author unknown)
+    * The pidof command used to discover the correct PID of
+    a process even if the wrong path was given. For example
+    pidof /wrongpath/sleep would find the PID of a command run as "sleep".
+    This bug was reported on Launchpad for Ubuntu and on Savannah.
+    https://bugs.launchpad.net/ubuntu/+source/sysvinit/+bug/1546126
+    http://savannah.nongnu.org/bugs/?47196
+    This bug appears to have been fixed in the development branch,
+    allowing these bugs to be tested/closed.
+    * Confirmed Savannah bug #37114 (mountpoint does not detect
+    mount points using --bind on same file system) still exists,
+    but fixed in Debian and Red Hat.
+    Considering this bug closed since distributions are using
+    util-linux's mountpoint program and ours is no longer
+    built/used by default.
+    Considered importing util-linux mountpoint but that would duplicate
+    effort and pull in a new dependency on libmount.
+    * Problem with pidof breaks after prelink (Savannah bug #34992)
+    fixed. Patch supplied by Dave Dykstra.
+    * Patch to automatically spawn a getty on kernel consoles
+    The feature is useful for developers and admins that occasionally need
+    to boot with e.g. console=ttyS0.
+    The built in default can be overridden via inittab for each device. An
+    entry like "S0::off:" turns off the getty on ttyS0.
+    characters in log file. Also makes parsing easier.
+    This should close Savannah bug report 36528.
+    http://savannah.nongnu.org/bugs/?36528
+    * Applied patches provided in Savannah bug report 49991. Fix tabs in
+    bootlogd and avoid printing uninitialized "buf" variable when
+    consolename() fails.
+
+  [ Werner Fink ]
+  * Do not forget room for last NULL of new environment (was
+    local bug 35866)
+  * Handle deleted binaries in pidof (was local bug #34992)
+  * Allow init to delete extra environment variables (was local bug
+    #35858)
+  * Avoid that init double environment variables for its children
+    (was local bug #35855)
+  * Remove man-db tag for encoding for canonical man
+  * Sulogin: try to detect the real device(s) used for the system console
+    /dev/console if but only if /dev/console is used.  On Linux this can
+    be more than one device, e.g. a serial line as well as a virtual
+    console as well as a simple printer.
+  * Fix counting message lines in wall. Patch from Petr Lautrbach.
+  * Fix bad printf conversion specifier in wall. Patch from Sébastien Luttringer.
+  * Add patches from Openwall project. Thanks goes to Solar Designer.
+  * Add code to detect the system consoles with the help of the
+    new /proc/consoles files of linux kernel 2.6.38+
+  * Try to make utmpdump IPv6 valid, change based on suggestion from
+    Navdeep Bhatia (see local bug #32429)
+  * Fix signal and alarm handling based on the patch from Florent Viard.
+    (was local bug #32304)
+  * Add fix for Redhat bug #573346: last incorrectly displays IPv6
+    addresses (was local bug #29497)
+  * Correct fix for Debian bug #547073: use IUTF8 flag if defined
+    and if already set to make sure the utf-8 flag is not cleared
+    from the tty. Patch from Samuel Thibault.
+  * Include limits.h in killall.c to enforce definition of PATH_MAX
+  * Fix sysvinit bug #29758 Linker invocation should not contain
+    headers. Change based on patch from Elias Pipping.
+  * Add fix for Debian bug #580272: use return value 1 of
+    is_selinux_enabled() to determine if SELinux is enabled,
+    otherwise initialize SELinux and load the policy. Patch from
+    Petter Reinholdtsen.
+  * Make quotes visible in example of the manual page of fstab-decode
+  * Sulogin: enforce reconnection of stdin/stdout/stderr if a device
+    was specified.
+  * Sulogin: if zero is read at reading the passwd guess it's done.
+  * Sulogin: respect byte order that is do not mix chars and ints
+  * Shutdown: use PATH_DEFAULT as suggested by Paul Arthur in local bug #36101
+  * Killall5/pidof: handle strange names of executables (local bug #36252)
+  * Sulogin: be aware the crypt(3) may fail (local bug #36313)
+
+  [ Petter Reinholdtsen ]
+  * Next release will be 2.89dsf.
+  * Add #ifdef in bootlogd.c to avoid gcc warnings about unused
+    variable on non-linux platforms.
+  * Only set the VSWTC field for termios in init if it is available,
+    to get the source building on FreeBSD.
+  * Add some code to be able to detect programs even as user with
+    kernel 3.0 and above
+  * Improve message printed when signaling processes to stop.
+    Patch from Matias A. Fonzo at the dragora project.
+  * Rename internal functions warn() and shutdown() in the shutdown
+    binary to avoid surprising dynamic library name resolution
+    conflict with NSS modules.  Patch from Richard Tollerton.
+  * Try harder to find libcrypt.*, even if there is no static library
+    available.  Also look in /usr/lib/*/ for the library, to handle
+    Debian multiarch systems.  Based on patch from Andrew Gregory.
+  * Adjust included headers to be compatible with the musl C
+    library.  Patch from Matias A. Fonzo and Dragora.
+  * Move dovoid() macro from #ifdef__GLIBC__ to #ifdef __linux__,
+    to match the condutions of the place where it is used.  Thanks
+    to Matias A. Fonzo for noticing.
+  * Define _XOPEN_SOURCE when building to get crypt() from <unistd.h>
+    instead of using <crypt.h> in sulogin.c, to get the source building
+    with the musl C library.
+  * Use sysconf(_SC_SYMLOOP_MAX) instead of MAXSYMLINKS.  If sysconf
+    returns an error, fall back to MAXSYMLINKS on platforms that
+    define it.  Fixes build on Hurd.  Patch from Justus Winter and
+    Debian.
+  * Adjust makefile to make it easier to link all binaries statically.
+    Patch from Matias A. Fonzo and Dragora.
+  * Rewrite findtty() in bootlogd.c to not chance working directory, to
+    reduce the amount of failure that can happin in that function.
+  * Adapt bootlogd TIOCCONS call to kfreebsd.  Patch from Mats Erik
+    Andersson and Debian.
+  * Document length limit for the process field in the inittab.  Patch
+    from Johannes Truschnigg and Debian.
+  * Fix typo in fstab-decode(8) font escape.  Patch from Bjarni Ingi
+    Gislason and Debian.
+  * Port ifdown.c to FreeBSD.  Patch from Guillem Jover and Debian.
+  * Drop dsf part from version number.  It no longer make sense to keep.
+  * Remove obsolete/ directory from tarball.  None of it have been useful
+    for many years.
+  * Make it possible to specify the initctl path as a compile time
+    define INIT_FIFO.
+  * Use narrowly scoped file descriptor for handling opened TTY in
+    spawn().  Patch from Michał Kulling.
+  * Check exit code from dup() in spawn() and log error if it fail.
+    Patch from Michał Kulling.
+
+ -- Petter Reinholdtsen <pere@hungry.com>  Sun Apr 11 11:28:55 CEST 2010
+
+sysvinit (2.88dsf) world; urgency=low
+
+  [ Petter Reinholdtsen ]
+  * Mention new home on Savannah in README.
+  * Revert change from Fedora/RedHat where the now obsolete command
+    INIT_CMD_CHANGECONS was introduced.  Based on feedback and patch
+    from Bill Nottingham.
+  * Adjust makefile to make sure the install directories are created
+    before files are copied into them.
+  * Simplify build rules, based on patch from Mike Frysinger and Gentoo.
+  * Fix minor bug in optimizing of argument parsing.  Based on
+    report from jakemus on freshmeat.
+  * Add casts to get rid of compiler warning about signed/unsigned issues.
+  * Change tty handling in init to make sure the UTF-8 flag is not cleared
+    on boot.  Patch from Samuel Thibault.
+  * Add Makefile in toplevel directory.
+  * Print usage information when shutdown is used by non-root user.
+    Patch from Mike Frysinger and Gentoo.
+  * Sync shutdown manual page and usage information.  Patch from Mike
+    Frysinger and Gentoo.
+  * Fix race condition in utmp writing.  Patch from Gil Kloepfer via
+    Mike Frysinger and Gentoo.
+  * Rewrite findtty() in bootlogd to recursively search /dev/ for the
+    correct device, to handle terminal devices for example in /dev/pty/.
+    Patch from Debian.
+  * Make sure bootlogd findpty() returns an error value when it fails to
+    find a usable pty.  Patch from Rob Leslie via Debian.
+  * Make sure bootlogd fflush() every line, even if asked not to flush
+    to disk using fdatasync().  Patch from Scott Gifford via Debian.
+  * Add compatibility code to handle old path "/etc/powerstatus" for a
+    while.
+  * Include definition for MNT_DETACH which is missing in older GNU libc
+    headers.
+  * Do not strip binaries before installing them, to make it easier to
+    get binaries with debug information installed.
+
+  [ Werner Fink ]
+  * Add the comment from Andrea Arcangeli about the correct
+    place of setting the default childhandler within spawn().
+  * Make sure that newline is printed out for last(1) even
+    if an utmp record entry is truncated.
+  * Check if utmp not only exists but also is writable and delay
+    writing out of the utmp runlevel record if utmp is not writable.
+  * Be able to find libcrypt also on 64 bit based architectures.
+  * Add option -w to the last command to display the full user and
+    domain names in the output.  Patch from Petr Lautrbach.
+  * Add a manual page for utmpdump as this tool is sometimes
+    very useful even if not intended for normal use.
+  * Use paths.h macros for wall
+  * Change path "/etc/powerstatus" to "/var/run/powerstatus"
+  * Detected also removable block devices at halt/reboot to be able
+    to flush data and send them the ATA standby command.  This should
+    avoid data loss on USB sticks and other removable block devices.
+  * Flush block devices on halt/reboot if not done by the kernel.
+  * Set SHELL to /bin/sh in the environmant of shutdown.
+  * Retry to write out shutdown messages if interrupted.
+  * pidof/killall5 - make omit pid list a dynamic one.
+  * pidof - provide '-n' to skip stat(2) syscall on network based FS.
+  * init - avoid compiler warnings
+  * init - initialize console by using the macros from ttydefaults.h
+  * init - add the possibility to ignore further interrupts from keyboard
+  * init - add the possibility to set sane terminal line settings
+  * sulogin - add the possibility to reset the terminal io
+  * Fix some minor problems
+  * init - enable is_selinux_enabled() to detect selinuxfs
+  * Add fix for Debian bug #536574 -- Can be enabled by -DACCTON_OFF
+  * Add helper program fstab-decode to make it easier to handle
+    /etc/mtab content. Patch by Miloslav Trmac and Fedora.
+  * Add fix for Debian bug #335023 - Make sure TERM is set on FreeBSD.
+  * Add fix for Debian bug #374038 - Make it clear that shutdown -c can
+    only cancel a waiting shutdown, not an active one.
+  * Add note to pidof manual page about the use of readlink(2). Patch by
+    Bill Nottingham and Fedora.
+  * Add PAM patch contrib/notify-pam-dead.patch based on Debian bug
+    #68621, which will add PAM support for programs spawned by init on
+    the console like sulogin. Based on patch by Topi Miettinen.  This
+    patch is not applied by default yet while we review its
+    usefulness.  It is only helpful for session handling, as sulogin
+    do not use and will not use a PAM conv() function.  The current
+    sulogin is able to handle DES as well as MD5, SHA, and Blowfish
+    encrypted passwords due using getpwnam(3).
+  * Move utmp/wtmp before the execvp() in spawn() to be sure to
+    use the correct pid even on a controlling tty
+  * Remaining problem is that the pid of the second fork() for
+    getting a controlling tty isn't that reported by spawn()
+  * Re-enable writing utmp/wtmp for boot scripts
+  * Extend sulogin to support additional encryption algorithms
+  * Re-enable maintenance message of sulogin
+  * Enable the sulogin fallback password check to handle  MD5, SHA, and
+    Blowfish encrypted passwords in case of getpwnam(3) fails.
+  * sulogin picking the SELinux context was broken. Patch by Daniel Walsh
+
+ -- Petter Reinholdtsen <pere@hungry.com>  Sun Apr 11 11:28:55 CEST 2010
+
+sysvinit (2.87dsf) world; urgency=low
+
+  * Fix typos and do minor updates in the manual pages.
+  * Correct section of mountpoint(1).
+  * Document -e and -t options for telinit in init(8).
+  * Update address of FSF in the COPYRIGHT file.
+  * Document in halt(8) that -n might not disable all syncing.
+    Patch by Bill Nottingham and Fedora
+  * Adjust output from "last -x".  In reboot lines, print endpoint
+    of uptime too.  In shutdown lines print downtimes rather than
+    the time between downs.  Fix typo in string compare in last.c.
+    Patch by Thomas Hood.
+  * Improve handling of IPv6 addresses in last.  Patch from Fedora.
+  * Document last options in usage information, previously only
+    mentioned in the manual page.
+  * Add new option -F to last, to output full date string instead
+    of the short form provided by default.  Patch from Olaf Dabrunz
+    and SuSe.
+  * Adjust build rules to make sure the installed binaries
+    are stripped.
+  * Increase the compiler warning level when building.
+  * Fix utmp/wtmp updating on 64-bit platforms.  Patch by Bill
+    Nottingham and Fedora.
+  * Avoid unchecked return value from malloc() in utmpdump.
+    Patch from Christian 'Dr. Disk' Hechelmann and Fedora.
+  * Make sure to use execle and no execl when passing environment to
+    the new process.  Patch from RedHat.
+  * Correct init to make sure the waiting status is preserved across
+    re-exec.  Patch from RedHat.
+  * Correct init to avoid race condition when starting programs during
+    boot.  Patch from SuSe.
+  * Allow 'telinit u' in runlevels 0 and 6.  Patch from Thomas Hood.
+  * Change install rules to make pidof an absolute symlink.  Patch from
+    Thomas Hood.
+  * Improve error message from init if fork() fail.  Patch found in Suse.
+  * Add support for SE Linux capability handling.  Patch from Manoj
+    Srivastava, adjusted to avoid aborting if SE policy was loaded in
+    the initrd with patch from Bill Nottingham and Fedora.
+  * Add -c option to pidof for only matching processes with the same
+    process root.  Ignore -c when not running as root.  Patch from
+    Thomas Woerner and Fedora.
+  * Adjust init to terminate argv0 with one 0 rather than two so that
+    process name can be one character longer.  Patch by Kir Kolyshkin.
+  * Make sure bootlogd exit with non-error exit code when forking of
+    the child successfully.
+  * Add bootlogd option -s to make it possible to control the use of
+    fdatasync().  Patch from Thomas Hood.
+  * Add bootlogd option -c to tell it to create the log file if it does
+    not exist.  Patch from Thomas Hood.
+  * Let bootlogd also look at ttyB* devices to work on HPPA.  Patch
+    from Thomas Hood.
+  * Change init to use setenv() instead of putenv, make sure the PATH
+    value is usable on re-exec.  Patch from Thomas Hood.
+  * Add usleep in killall5 after killing processes, to force the kernel
+    to reschedule.  Patch from SuSe.
+  * Modify pidof to not print empty line if no pid was found.
+  * Modify init and sulogin to fix emergency mode's tty, making sure ^C
+    and ^Z work when booting with 'emergency' kernel option.  Patch from
+    Samuel Thibault.
+  * Modify init to allow some time for failed opens to resolve themselves.
+    Patch from Bill Nottingham and Fedora.
+  * Modify init to shut down IDE, SCSI and SATA disks properly.  Patches
+    from Sebastian Reichelt, Werner Fink and SuSe.
+  * Modify wall to use UT_LINESIZE from <utmp.h> instead of hardcoded
+    string lengths.  Patch from SuSe.
+  * Change wall to make halt include hostname in output.
+  * Change killall to avoid killing init by mistake.  Patch from SuSe.
+  * Change killall5 to use the exit value to report if it found any
+    processes to kill.  Patch from Debian.
+  * Add option -o opmitpid to killall5, to make it possible to skip
+    some pids during shutdown.  Based on patch from Colin Watson and
+    Ubuntu.
+  * Add references between killall5 and pidof manual pages.  Patch from Debian.
+  * Modify killall to work better with user space file system, by
+    changing cwd to /proc when stopping and killing processes, and
+    avoiding stat() when the value isn't used.  Also, lock process
+    pages in memory to avoid paging when user processes are stopped.
+    Patch from Debian and Goswin von Brederlow with changes by Kel
+    Modderman.
+  * Change shutdown to only accept flags -H and -P with the -h flag,
+    and document this requirement in the manual page.
+  * Change reboot/halt to work properly when used as a login shell.
+    Patch by Dale R. Worley and Fedora.
+  * Let sulogin fall back to the statically linked /bin/sash if both roots
+    shell and /bin/sh fail to execute.
+
+ -- Petter Reinholdtsen <pere@hungry.com>  Sun, 12 Jul 2009 19:58:10 +0200
+
+sysvinit (2.86) cistron; urgency=low
+
+  * Fixed up bootlogd to read /proc/cmdline. Also keep an internal
+    linebuffer to process \r, \t and ^H. It is becoming usable.
+  * Applied trivial OWL patches
+  * Block signals in syslog(), since syslog() is not re-entrant
+    (James Olin Oden <joden@malachi.lee.k12.nc.us>, redhat bug #97534)
+  * Minor adjustments so that sysvinit compiles on the Hurd 
+  * killall5 now skips kernel threads
+  * Inittab entries with both 'S' and other runlevels were broken.
+    Fix by Bryan Kadzban <bryan@kadzban.is-a-geek.net>
+  * Changed initreq.h to be more flexible and forwards-compatible.
+  * You can now through /dev/initctl set environment variables in
+    init that will be inherited by its children. For now, only
+    variables prefixed with INIT_ can be set and the maximum is
+    16 variables. There's also a length limit due to the size
+    of struct init_request, so it should be safe from abuse.
+  * Option -P and -H to shutdown set INIT_HALT=POWERDOWN and
+    INIT_HALT=HALT as environment variables as described above
+  * Add "mountpoint" utility.
+  * Slightly better algorithm in killall5.c:pidof()
+  * Added some patches from fedora-core (halt-usage, last -t,
+    sulogin-message, user-console)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Fri, 30 Jul 2004 14:14:58 +0200
+
+sysvinit (2.85) cistron; urgency=low
+
+  * Add IPv6 support in last(1)
+  * Sulogin: even if the root password is empty, ask for a password-
+    otherwise there is no way to set a timeout.
+  * Removed support for ioctl.save.
+  * Turned of support for /etc/initrunlvl and /var/run/initrunlvl
+  * Fixed warts in dowall.c ("Dmitry V. Levin" <ldv@altlinux.org>)
+  * Fix init.c::spawn(). The "f" variable was used both as file descriptor
+    and waitpid(2) return code.  In certain circumstances, this leads to
+    TIOCSCTTY with wrong file descriptor (Vladimir N. Oleynik).
+  * Fix fd leak in sulogin (Dmitry V. Levin).
+  * More error checking in all wait() calling code (Dmitry V. Levin).
+  * Fix argv[] initialization in spawn() (Dmitry V. Levin).
+  * Change strncpy to strncat in most places (Dmitry V. Levin).
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue, 15 Apr 2003 16:37:57 +0200
+
+sysvinit (2.84) cistron; urgency=low
+
+  * Don't use /etc/initlvl interface for telinit; only use /dev/initctl,
+    and give a clear error when that fails.
+  * Add -i/--init command line flag to init - this tells init
+    'behave as system init even if you're not PID#1'. Useful for
+    testing in chroot/jail type environments.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue, 27 Nov 2001 13:10:08 +0100
+
+sysvinit (2.83) cistron; urgency=low
+
+  * Fix bug in shutdown where it didn't check correctly for a
+    virtual console when checking /etc/shutdown.allow
+  * Fix race condition in waitpid() [Andrea Arcangeli]
+  * Call closelog() after openlog()/syslog() since recent libc's
+    keep the logging fd open and that is fd#0 aka stdin.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue,  2 Oct 2001 23:27:06 +0200
+
+sysvinit (2.82) cistron; urgency=low
+
+  * Print out correct version number at startup.
+  * Fix spelling of initttab in init(8)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Thu, 23 Aug 2001 17:50:44 +0200
+
+sysvinit (2.81) cistron; urgency=low
+
+  * Fix typo/bug in killall5/pidof, -o option failed to work since 2.79.
+    Reformatted source code to prevent this from happening again.
+  * shutdown.8: applied redhat manpage update
+  * sulogin: applied redhat sysvinit-2.78-sulogin-nologin.patch
+  * sulogin: applied redhat sysvinit-2.78-notty.patch
+  * sulogin: applied redhat sysvinit-2.78-sigint.patch
+
+sysvinit (2.80) cistron; urgency=low
+
+  * Grammar/spelling fixes in shutdown.c (Christian Steinrueck)
+  * Don't set controlling tty for non-(sysinit,boot,single) runlevels
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Thu, 26 Jul 2001 13:26:56 +0200
+
+sysvinit (2.79) cistron; urgency=low
+
+  * New upstream version
+  * several fixes to wall by Tim Robbins <fyre@box3n.gumbynet.org>
+  * Several extra boundary checks by Solar Designer
+  * Make /dev/console controlling tty
+  * Stricter checks on ownership of tty by mesg(1)
+  * Documented and restricted -n option to wall(1)
+  * Make it compile with glibc 2.2.2
+  * Document IO redirection in wall manpage (closes: #79491)
+  * Update README (closes: #85650)
+  * Fix init.8 manpage (closes:  #75268)
+  * Fix typo in halt(8) manpage (closes:  #67875)
+  * Check time argument of shutdown(8) for correctness (closes: #67825)
+  * Check for stale sessions in last(1) (Chris Wolf <cwolf@starclass.com>)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Wed,  4 Jul 2001 15:04:36 +0200
+
+sysvinit (2.78-2) frozen unstable; urgency=high
+
+  * Change "booting" to "reloading" message at reload
+  * Add "-z xxx" dummy command line argument (closes: #54717)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Fri, 11 Feb 2000 12:17:54 +0100
+
+sysvinit (2.78-1) unstable; urgency=low
+
+  * 2.78 will be the new upstream version, I'm skipping 2.77
+  * Shutdown now calls sync before switching the runlevel to 0 or 6,
+    or before unmounting filesystems if -n was used (closes: #46461)
+  * Some cosmetic changes to init.c (closes: #32079)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Thu, 30 Dec 1999 20:40:23 +0100
+
+sysvinit (2.77-2) unstable; urgency=low
+
+  * Fix last -i option
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue,  5 Oct 1999 21:51:50 +0200
+
+sysvinit (2.77-1) unstable; urgency=low
+
+  * Write reboot record into utmp file as well to make rms happy
+  * Fork and dump core in / if SIGSEGV is received for debugging purposes
+  * Patch by Craig Sanders <cas@vicnet.net.au> for "last" -i option
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Wed,  4 Aug 1999 11:16:23 +0200
+
+sysvinit (2.76-4) unstable; urgency=low
+
+  * Change dowall.c to handle Unix98 ptys correctly
+  * Add comment in rcS about usage of setup.sh and unconfigured.sh
+  * Shutdown now removes nologin file just before calling telinit
+  * SEGV handler now tries to continue after sleep of 30 seconds.
+    On a 386-class processor it also prints out the value of EIP.
+  * Fix for racecondition in check_init_fifo() by Richard Gooch
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Sat,  8 May 1999 17:22:57 +0200
+
+sysvinit (2.76-3) frozen unstable; urgency=high
+
+  * Small bugfix to last.c courtesy of Danek Duvall <duvall@emufarm.ml.org>
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue, 12 Jan 1999 12:12:44 +0100
+
+sysvinit (2.76-1) frozen unstable; urgency=high
+
+  * Fix bug in check_pipe() which crashes init on the Alpha.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue,  3 Nov 1998 11:09:13 +0100
+
+sysvinit (2.75-4) unstable; urgency=low
+
+  * Change sulogin password buffer to 128 characters.
+  * Don't print control characters in dowall.c
+  * Try to open getenv ("CONSOLE"), /dev/console and /dev/tty0 in order.
+    For backwards compatibility when you try to boot a 2.0.x kernel
+    with a linux > 2.1.70 /dev/console device.
+  * Change src/Makefile for non-debian systems (mainly, RedHat)
+  * Try to create /dev/initctl if not present; check every time to see
+    if the dev/ino of /dev/initctl has changed and re-open it. This should
+    help devfs a bit.
+  * Send SIGUSR1 to init at bootup to let it re-open /dev/initctl;
+    again in support of devfs.
+  * Moved pidof to /bin (it's only a link to killall5 anyway)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Mon,  5 Oct 1998 14:03:14 +0200
+
+sysvinit (2.75-2) frozen unstable; urgency=medium
+
+  * Fix last.c again.
+  * Add check to see if /dev/initctl is really a FIFO
+  * In ifdown.c first down all shaper devices then the real devices
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue,  2 Jun 1998 22:43:01 +0200
+
+sysvinit (2.75-1) frozen unstable; urgency=low
+
+  * Rewrote last.c to be much more memory friendly and correct,
+    thanks to Nick Andrew <nick@zeta.org.au> and
+    David Parrish <dparrish@zeta.org.au>
+  * Fixes bugs:
+    #21616: sysvinit: sulogin thinks md5 root password is bad
+    #21765: sysvinit: Typo in `killall5.c'
+    #21775: sysvinit: sysvinit does not support MD5 hashed passwords
+    #21990: /usr/bin/last: unnecessary memset and off-by-one bug
+    #22084: sysvinit 2.74-4: SIGPWR missing on sparc
+    #21900: init, powerfail events, and shutdown.allow
+    #21702: init 0 does not work as expected...
+    #21728: sysvinit: Typo in `init.c'
+    #22363: sysvinit: discrepance btw. manpage and /sbin/init
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue, 19 May 1998 11:02:29 +0200
+
+sysvinit (2.74-4) frozen unstable; urgency=medium
+
+  * Add -o option to last to process libc5 utmp files.
+  * Buffer overflow fixed in init.c (not very serious; only exploitable
+    by root). Thanks to Chris Evans <chris@ferret.lmh.ox.ac.uk>
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Wed, 15 Apr 1998 17:04:33 +0200
+
+sysvinit (2.74-1) unstable; urgency=low
+
+  * Should compile with glibc 1.99 :)
+  * Change behaviour of reboot(1) and halt(1) so that the default when
+    the runlevel can't be determined is to call shutdown.
+  * Added re-exec patch from Al Viro (21 Feb 1998):
+        'U' flag added to telinit. It forces init to re-exec itself
+        (passing its state through exec, certainly).
+        May be useful for smoother (heh) upgrades.
+        24 Feb 1998, AV:
+        did_boot made global and added to state - thanks, Miquel.
+        Yet another file descriptors leak - close state pipe if
+        re_exec fails.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Thu, 12 Mar 1998 17:42:46 +0100
+
+sysvinit (2.73-2) unstable; urgency=low
+
+  * Change _NSIG to NSIG for 2.1.x kernel includes.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Thu,  8 Jan 1998 16:01:02 +0100
+
+sysvinit (2.73-1) unstable; urgency=low
+
+  * Use siginterrupt, now that system calls are restarted by default.
+    Main symptom was that the sulogin timeout didn't work but there
+    might have been more hidden problems.
+  * Kill process immediately if turned off in inittab
+  * Fixed sulogin check on tty arg.
+  * Use strerror() instead of sys_errlist
+  * wall now supports a '-n' option to suppress [most of] the banner.
+    Debian doesn't use sysvinit's wall, but apparently Redhat does.
+  * Add '-F' (forcefsck) option to shutdown
+  * Close and reopen /dev/initctl on SIGUSR1 (mainly for a /dev in ram)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Sat,  3 Jan 1998 16:32:39 +0100
+
+sysvinit (2.72-3) unstable; urgency=low
+
+  * Add extra fork() in dowall.c to avoid hanging in rare cases
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Wed, 22 Oct 1997 14:44:00 +0200
+
+sysvinit (2.72) unstable; urgency=low
+
+  * Applied manual page patches by Bill Hawes <whawes@star.net>.  Thanks Bill!
+  * Applied patches to the sample Slackware scripts by
+    "Jonathan I. Kamens" <jik@kamens.brookline.ma.us>
+  * Fix halt and reboot runlevels 0 & 6 check.
+  * Only say "no more processes left in runlevel x" once
+  * Fix race condition with SIGCHLD in spawn()
+    (thanks to Alon Ziv <alonz@CS.Technion.AC.IL>)
+  * Compress all manpages (missed 2)
+  * Compiled for libc6
+  * Added poweroff patch by Roderich Schupp <rsch@ExperTeam.de>
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Sun, 12 Oct 1997 17:20:17 +0200
+
+sysvinit (2.71-2) frozen unstable; urgency=low
+
+  * Print 2.71 instead of 2.70 on startup :)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Mon, 5 May 1997 12:45:25 +0200
+
+sysvinit (2.71-1) frozen unstable; urgency=high
+
+  * Added code for updwtmp() in utmp.c for glibc (2.0.3)
+  * Fixed all programs to use functions from utmp.c and getutent()
+  * Do not try to clean up utmp in init itself (Bug#9022)
+  * Removed sync() from main loop.
+  * Hopefully fixes bug #8657 (shutdown signal handling)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Sat, 26 Apr 1997 19:57:27 +0200
+
+sysvinit (2.70-1) unstable; urgency=low
+
+  * Respawn fix
+  * Removed StUdLy CaPs from source code
+  * Moved files in source archive around
+  * Fixes for glibc (utmp handling, signal handling).
+  * Fixed '-d' option to last (now also works without '-a').
+  * Added extra checking in last.c to prevent showing dead entries
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Fri, 7 Feb 1997 15:31:30 +0100
+
+sysvinit (2.69-1) frozen unstable; urgency=medium
+
+  * Fixed bug that can throw X in a loop (or any other app that reads from
+    /dev/tty0)
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Sun, 1 Dec 1996 15:32:24 +0100
+
+sysvinit (2.67-1) frozen unstable; urgency=high
+
+  * Fixes problem with /dev/console being controlling terminal of some
+    daemons
+  * Puts copyright file in the right place
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Fri, 15 Nov 1996 12:23:33 +0100
+
+sysvinit (2.66-1) unstable; urgency=medium
+
+  * Skipped 2.65. A development 2.65 got out by accident and is apparently
+    being used..
+  * Also compiles and runs with GNU libc (and on the Alpha)
+  * Fixed dowall.c not to exit when getpwuid() fails and uid == 0.
+  * Fixed init panic'ing on empty lines in /etc/inittab
+  * Changed default PATH to include /usr/local/sbin
+  * Set /dev/console as controlling terminal for sysinit,bootwait,wait,powerwait
+    This allows using ^C to interrupt some parts of eg the boot process.
+  * Remove old symlink in /var/log/initlvl; let init check both
+    /var/log and /etc itself.
+
+ -- Miquel van Smoorenburg <miquels@cistron.nl>  Tue, 29 Oct 1996 13:46:54 +0100
+
+2.66    29-Oct-1996
+- Skipped 2.65. A development 2.65 got out by accident and is apparently
+  being used..
+- Fixed dowall.c not to exit when getpwuid() fails and uid == 0.
+- Fixed init panic'ing on empty lines in /etc/inittab
+- Changed default PATH to include /usr/local/sbin
+- Ported to Linux/Alpha and GNU libc.
+- Set /dev/console as controlling terminal for sysinit,bootwait,wait,powerwait.
+  This allows using ^C to interrupt some parts of eg the boot process.
+- Remove old symlink in /var/log/initlvl; let init check both
+  /var/log and /etc itself.
+
+2.64	28-Jun-1996
+- Init checks CONSOLE environment variable on startup (overrides /dev/console)
+- Init sets CONSOLE variable for all its children.
+- Wtmp(): when zeroing out old utmp entries, keep ut_id field
+- Wtmp(): try to re-use ut_id field if possible.
+- SetTerm(): only read from /etc/ioctl.save if written once.
+- Included start-stop-daemon, C version (source only).
+- Fixed wait() for the emergency shell.
+- killall5: ignore signal before doing kill(-1, pid).
+
+2.63    14-Jun-1996
+- Fixed preinst script for Debian
+- Fixed init.c to become init daemon if name is init.new
+- Fixed pidof to not return PIDs of shell scripts
+
+2.62-2	09-Jun-1996
+- Changed debian /etc/init.d/boot script to create a nologin file
+  at boot and to remove it just before going multiuser.
+
+2.62    31-May-1996
+- Decided to release a 2.62 version with a BIG WARNING about upgrading
+  init in it. Will send a patch to Linus for the linux/Documentation/Changes
+  file so that 2.62 or later is mentioned as the version to upgrade to.
+- Added docs for Slackware
+
+2.61-3  29-May-1996
+- Fixed debian/etc/init.d/network for the lo device.
+- Added "-xdev" to the cd /tmp && find in debian/etc/init.d/boot
+- Made remove time for files in /tmp configurable.
+
+2.61    29-Apr-1996
+- Changed /etc/init.d/boot script again
+- Fixed problem in init.c with trailing whitespace after entries in inittab
+- Fixed killall5 problems
+- Added manpage for lastb
+- Added SHELL= environment variable to sulogin
+- Fixed sulogin & shadow problems
+- Added timeout option to sulogin
+
+2.60-2  16-Apr-1996
+- Fixed sulogin (didn't work if root wasn't first entry in shadow file)
+- Fixed mesg for systems with "tty" group (such as Debian)
+- Fixed nsyslog() in killall5.c
+
+2.60   01-Apr-1996
+- Fixed race condition in init.c, resulting in hanging shutdowns.
+  Courtesy of Max Neunhoeffer <Max.Neunhoeffer@urz.uni-heidelberg.de>.
+- Fixed debian/etc/init.d/boot for swapon and mdadd
+- Added architecture to debian.control
+- Added manpages for rc.boot and rc.local
+- Updated inittab manpage for 4-character runlevel field
+- Added debian replaces for bsdutils < version_without_mesg
+- Fixed init.c so that it also works with kernels 1.3.81 and up
+
+2.59   10-Mar-1996
+- Init logs less to syslog (suspected to hang in syslog() or openlog() )
+- removed closelog() from init.c
+- removed time check of runlevel record in halt.
+- Added options to last to get hostname from ut_addr field
+- Added last and mesg to installation targets
+- rewrote /etc/init.d/boot a bit.
+
+2.58-2 04-Jan-1996
+- Changed etc/init.d/rc to do a stty onlcr
+- Added /var/log/initrunlvl symlink
+
+2.58-1 31-Dec-1995
+- Added the latest debian files.
+- Added support for 4-character id fields (if you have libc5).
+- Fixed pidof (in killall5) parsing of /proc/.../stat
+- Save restore GMT setting in /etc/init.d/boot
+
+2.57d 03-Dec-1995
+- Added sulogin
+- Added "-b" flag to init, gives a shell before
+  anything else (in case the startup scripts are screwed)
+- Moved fastboot to /fastboot
+- Folded in Debian patches.
+- Removed old scripts
+- Added debian /etc/directory.
+
+2.57c 08-Oct-1995
+- Changed over to init_request (with initreq.h)
+- Processes no longer killed when "process" field
+  changes, change takes effect after next respawn.
+
+2.57b xx-Aug-1995
+- Bugfix release for Debian and Slackware 3.0
+
+2.57a 10-Jul-1995
+- Fixed race condition init init.c wrt got_chld
+- Fixed one-off for malloc in killall5.c
+- Changed dowall.c
+- Console code: no relink to /dev/systty on CTRL-ALT-DEL)
+
+2.57 22-May-1995
+- Changed a few things here and there, didn't
+	 	  really document it :)
+
+2.55 17-Jan-1995
+- Added option to shutdown to run standalone.
+
+2.54 12-Jan-1995
+- Added GNU copyrigh to all *.[ch] files.
+- added /etc/initscript
+- reboot and halt now call shutdown in runlevels 1-5
+- Can run from read-only root (CDROM)
+
+2.53 10-Oct-1994
+- Renamed pidof to killall5, updated all scripts to
+  use killall5 instead of kill -1 ....
+- Rewrote scripts to use this, and some general changes.
+- Added SysV command line compatibility to shutdown.
+
+2.52 30-Aug-1994
+- Added `powerfailnow' keyword, for when UPS battery is low.
+- Updated `last'.
+- Fixed utmp handling (wrt. CLEAN_UTMP)
+TODO:
+* Make last compatible with GNU/BSD (long options?)
+* update powerd
+* remote SIGPWR broadcast? in powerd? (with priv. port)
+* remote shutdown
+
+2.50  14-Feb-1994
+- Ignores unknown command line arguments.
+- Modelled more after the "real" sysVinit
+- Lots of changes all over the place.
+  (like showing runlevel in "ps" listing, logging
+   runlevel into utmp file etc)
+- now using "reliable" signals instead of V7 style.
+- Updated all scripts. Examples are in two directories:
+  etc (normal) and etc-sysv (sysv style scripts).
+- runlevel 0 = halt, 1 = single user, 6 = reboot.
+- added support for serial console.
+- updated Propaganda, manpages.
+- added shutdown access control.
+
+2.4  24-May-93
+- Send out the official version into the world as
+  SysVinit-2.4.tar.z.
+
+2.4g 15-May-93
+- Changed init to really catch SIGPWR 'cause we
+  hooked up an UPS to the Linux machine. The
+  keyword for catching the TreeFingerSalute is
+  now "ctrlaltdel" instead of "power{wait,fail}".
+
+2.4a 22-Apr-93
+- Fixed last to reckognize BSD style wtmp logging.
+- Changed init to write wtmp records that are
+  SysV compliant but are also reckognized by the
+  BSD last. Added a '+' option to the 'process'
+  field of inittab, for getties that want to do
+  their own utmp/wtmp housekeeping (kludge!).
+- Now accepts a runlevel on the command line,
+  and reckognizes the 'auto' argument. (Sets the
+  environment variable AUTOBOOT to YES)
+
+2.2.3 24-Mar-93
+- Ripped out the 'leave' action. To difficult, and
+  unneeded.
+- Going single user now kills _all_ processes.
+- Added '-t secs' option to all commands.
+- This version is stable enough to post.
+
+2.2 02-Mar-93
+- Made wait()'s asynchronous
+- Changed whole thing to one big state machine
+- Now using 'pseudo levels' # & * for SYSINIT & BOOT
+- Added a new type of 'action', called leave. This
+  process will be executed when the system goes from a
+  runlevel specified in it's runlevel field to a 
+  level that's not. Nice to bring down NFS and the like.
+
+2.1 28-Jan-93
+- Fixed a bug with 'boot' and 'once'.
+- Check 'initdefault' for validity.
+- Reckognizes "single" as command line argument.
+- Retries execvp with 'sh -c exec ..' if command
+  is a shell script. (shouldn't execvp do this?)
+- Added patches to use syslog if defined.
+
+2.0 08-Dec-92
+- Rewrote the code totally, so started with a new
+  version number.
+- Dropped Minix support, this code now is Linux - specific.
+- With TEST switch on, this init & telinit can
+  run standalone for test purposes.
+
+1.3, 05-Jul-92
+- Got a 386, so installed Linux. Added 'soft' reboot
+  to be default under linux. Fixed some typos.
+
+1.2, 16-Jun-92
+- Bugreport from Michael Haardt ; removed deadlock
+  and added 'waitpid' instead of 'wait' for SYSV.
+
+1.1, 30-Apr-92
+- Read manual wrong: there is no 'action' field called
+  process, but all entries are of type process. Every
+  'process' get exec'ed by /bin/sh -c 'exec command'.
+- Rapidly respawning processes are caught in the act.
+- _SYSV support is really Linux support,
+  done by poe@daimi.aau.dk on 25-Mar-92.
+
+ 1.0, 01-Feb-92
+- Initial version, very primitive for the Minix
+  operating system. Required some mods. to the
+  kernel.
+

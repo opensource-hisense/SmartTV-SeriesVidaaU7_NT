@@ -1,0 +1,227 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(src/ifusiondale.c)
+
+AC_PREREQ(2.52)
+
+#
+# Making releases:
+#   FUSIONDALE_MICRO_VERSION += 1;
+#   FUSIONDALE_INTERFACE_AGE += 1;
+#   FUSIONDALE_BINARY_AGE += 1;
+# if any functions have been added, set FUSIONDALE_INTERFACE_AGE to 0.
+# if backwards compatibility has been broken,
+# set FUSIONDALE_BINARY_AGE and FUSIONDALE_INTERFACE_AGE to 0.
+#
+FUSIONDALE_MAJOR_VERSION=0
+FUSIONDALE_MINOR_VERSION=1
+FUSIONDALE_MICRO_VERSION=1
+FUSIONDALE_INTERFACE_AGE=0
+FUSIONDALE_BINARY_AGE=0
+FUSIONDALE_VERSION=$FUSIONDALE_MAJOR_VERSION.$FUSIONDALE_MINOR_VERSION.$FUSIONDALE_MICRO_VERSION
+
+AC_SUBST(FUSIONDALE_MAJOR_VERSION)
+AC_SUBST(FUSIONDALE_MINOR_VERSION)
+AC_SUBST(FUSIONDALE_MICRO_VERSION)
+AC_SUBST(FUSIONDALE_INTERFACE_AGE)
+AC_SUBST(FUSIONDALE_BINARY_AGE)
+AC_SUBST(FUSIONDALE_VERSION)
+
+AC_DEFINE_UNQUOTED(FUSIONDALE_VERSION,"$FUSIONDALE_VERSION",[The FusionDale version])
+
+# libstool versioning
+LT_RELEASE=$FUSIONDALE_MAJOR_VERSION.$FUSIONDALE_MINOR_VERSION
+LT_CURRENT=`expr $FUSIONDALE_MICRO_VERSION - $FUSIONDALE_INTERFACE_AGE`
+LT_REVISION=$FUSIONDALE_INTERFACE_AGE
+LT_AGE=`expr $FUSIONDALE_BINARY_AGE - $FUSIONDALE_INTERFACE_AGE`
+
+AC_SUBST(LT_RELEASE) 
+AC_SUBST(LT_CURRENT) 
+AC_SUBST(LT_REVISION)
+AC_SUBST(LT_AGE)
+
+# The earliest version that this release has binary compatibility with.
+# This is used for module locations.
+BINARY_VERSION=$FUSIONDALE_MAJOR_VERSION.$FUSIONDALE_MINOR_VERSION.$LT_CURRENT
+
+
+VERSION=$FUSIONDALE_VERSION
+PACKAGE=FusionDale
+
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION, no-define)
+
+AM_CONFIG_HEADER(config.h)
+AM_MAINTAINER_MODE
+AC_DISABLE_STATIC 
+AM_PROG_LIBTOOL
+AM_SANITY_CHECK
+AC_ISC_POSIX
+AM_PROG_CC_STDC
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_HEADER_STDC
+AC_C_BIGENDIAN
+AC_PROG_CPP
+
+AC_CHECK_SIZEOF(long)
+
+AC_CHECK_HEADERS(stdbool.h)
+
+dnl Clear default CFLAGS
+if test x"$CFLAGS" = x"-g -O2"; then
+  CFLAGS=
+fi
+
+CFLAGS="-O3 -ffast-math -pipe $CFLAGS"
+
+CPPFLAGS="-D_GNU_SOURCE $CPPFLAGS"
+
+#
+# check target architecture
+#
+have_x86=no
+have_x86_64=no
+have_arm=no
+have_ppc=no
+
+case x"$target" in
+  xNONE | x)
+    target_or_host="$host" ;;
+  *)
+    target_or_host="$target" ;;
+esac
+
+case "$target_or_host" in
+  i*86-*-*)
+    have_x86=yes
+    AC_DEFINE(ARCH_X86,1,[Define to 1 if you are compiling for ix86.])
+    ;;
+    
+  x86_64-*)
+    have_x86=yes
+    have_x86_64=yes
+    AC_DEFINE(ARCH_X86_64,1,[Define to 1 if you are compiling for AMD64.])
+    ;;
+
+  *arm*)
+    have_arm=yes
+    AC_DEFINE(ARCH_ARM,1,[Define to 1 if you are compiling for ARM.])
+    ;;
+
+  ppc-*-linux* | powerpc-*)
+    have_ppc=yes
+    AC_DEFINE(ARCH_PPC,1,[Define to 1 if you are compiling for PowerPC.])
+    ;;
+
+  *)
+    ;;
+esac
+
+
+AC_ARG_ENABLE(extra-warnings,
+  [  --enable-extra-warnings enable extra warnings [[default=no]]],,
+  enable_extra_warnings=no)
+if test "x$enable_extra_warnings" = xyes; then
+  CFLAGS="-W -Wno-sign-compare -Wno-unused-parameter -Wundef -Wcast-qual -Wcast-align -Waggregate-return -Wmissing-declarations -Winline $CFLAGS"
+fi
+
+AC_ARG_ENABLE(debug,
+  [  --enable-debug          enable debugging support [[default=no]]],,
+  enable_debug=no)
+if test "x$enable_debug" = xyes; then
+  CFLAGS="$CFLAGS -g3 -fno-inline"
+  CPPFLAGS="$CPPFLAGS -DDIRECT_ENABLE_DEBUG"
+fi
+
+AC_ARG_ENABLE(trace,
+  [  --enable-trace          enable trace support [[default=no]]],,
+  enable_trace=no)
+if test "x$enable_trace" = xyes; then
+  CFLAGS="$CFLAGS -finstrument-functions"
+fi
+
+if test "x$GCC" = xyes; then
+  CFLAGS="-Wall $CFLAGS"
+fi
+
+
+AC_ARG_ENABLE(examples, 
+  [  --enable-examples       enable examples [[default=yes]]],, enable_examples=yes)
+AM_CONDITIONAL(BUILD_EXAMPLES, test "x$enable_examples" = xyes)
+
+
+#
+# Find pkg-config
+#
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+if test x$PKG_CONFIG = xno ; then
+  AC_MSG_ERROR([*** pkg-config not found. See http://pkgconfig.sourceforge.net])
+fi
+
+if ! pkg-config --atleast-pkgconfig-version 0.9 ; then
+  AC_MSG_ERROR([*** pkg-config too old; version 0.9 or better required.])
+fi
+
+
+#
+# Check for Fusion
+#
+FUSION_REQUIRED_VERSION=1.1.0
+
+AC_MSG_CHECKING(for Fusion)
+if $PKG_CONFIG --atleast-version $FUSION_REQUIRED_VERSION fusion ; then
+  MODULEDIR=$libdir/`$PKG_CONFIG --variable=moduledirname fusion`
+  FUSION_CFLAGS=`$PKG_CONFIG --cflags fusion`
+  FUSION_LIBS=`$PKG_CONFIG --libs fusion`
+  AC_MSG_RESULT(found)
+else
+  AC_MSG_ERROR([*** Fusion $FUSION_REQUIRED_VERSION or newer is required. ])
+fi
+
+ 
+DATADIR=$datadir/fusiondale
+INCLUDEDIR=$includedir/fusiondale
+
+CFLAGS="$CFLAGS -Werror-implicit-function-declaration"
+
+# Honor aclocal flags
+ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
+
+AM_CONDITIONAL(BUILD_STATIC, test "$enable_static" = "yes")
+
+AC_SUBST(FUSION_CFLAGS)
+AC_SUBST(FUSION_LIBS)
+AC_SUBST(DATADIR)
+AC_SUBST(INCLUDEDIR)
+AC_SUBST(INTERNALINCLUDEDIR)
+AC_SUBST(MODULEDIR)
+AC_SUBST(PACKAGE)
+
+AC_OUTPUT([
+fusiondale.pc
+Makefile
+docs/Makefile
+docs/html/Makefile
+examples/Makefile
+include/Makefile
+include/fusiondale_version.h
+src/Makefile
+src/coma/Makefile
+src/core/Makefile
+src/messenger/Makefile
+src/misc/Makefile
+tools/Makefile
+])
+
+AC_MSG_RESULT([
+Build options: 
+  Version                   $VERSION
+  Install prefix	    $prefix
+  Build shared libs         $enable_shared
+  Build static libs         $enable_static
+  Build Examples            $enable_examples
+  Module directory          $MODULEDIR
+  CPPFLAGS                  $CPPFLAGS
+  CFLAGS                    $CFLAGS
+  FUSION_CFLAGS             $FUSION_CFLAGS
+  FUSION_LIBS               $FUSION_LIBS
+])

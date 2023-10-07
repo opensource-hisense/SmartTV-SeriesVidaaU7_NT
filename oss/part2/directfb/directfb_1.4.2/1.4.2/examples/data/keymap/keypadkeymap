@@ -1,0 +1,14 @@
+###############################Warning#####################################
+##This file shall be put into /config folder to supply MUF loading new key
+##mapping table. The HW keycode shall be translate into Key_ID and send
+##to UI progressing iteractions.
+## HW keycode   Key Id(DIKI_??)      Key sym    MUF key#####################
+## #########################################################################
+keycode  0x00 = h                 = 0xf079    #MVK_HOLD              g *
+keycode  0x01 = L                 = 0xf051    #MVK_PLAY              l
+keycode  0x02 = V                 = 0xf05b    #MVK_PREVIOUS          v
+keycode  0x03 = PAGE_UP           = 0xf007    #MVK_PAGE_UP           pageup
+keycode  0x05 = PAGE_DOWN         = 0xf008    #MVK_PAGE_DOWN         pagedown
+keycode  0x06 = LEFT              = 0xf000    #MVK_LEFT              left
+keycode  0x07 = M                 = 0xf012    #MVK_MENU              m
+keycode  0x08 = SHIFT_R           = 0xf006    #MVK_MEM_STOP          shift_r

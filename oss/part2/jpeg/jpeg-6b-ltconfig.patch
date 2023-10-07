@@ -1,0 +1,11 @@
+--- jpeg-6b/ltconfig	1998-03-25 23:25:39.000000000 +0800
++++ jpeg-6b/ltconfig	2020-04-13 14:58:50.506012837 +0800
+@@ -716,7 +716,7 @@
+ 
+   # See if GNU ld supports shared libraries.
+   if $LD --help 2>&1 | egrep ': supported targets:.* elf' > /dev/null; then
+-    archive_cmds='$CC -shared ${wl}-soname $wl$soname -o $lib$libobjs'
++    archive_cmds='$CC -shared $LDFLAGS ${wl}-soname $wl$soname -o $lib$libobjs'
+     runpath_var=LD_RUN_PATH
+     ld_shlibs=yes
+   else
